@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 1: 任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 5: 音频预处理与切分：VAD、重叠、对齐与波形级增广</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 6: 特征与前端：从 MFCC 到可学习前端，再到 SSL 表征</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 7: RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 8：Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 9: Transformer 自监督过渡：Conformer、Transducer 与 SSL 微调</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 10: Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 15: 开源数据集大全：ASR / 多语种 / 会议 / 噪声 / Diarization</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Untitled</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="chapter-12-multilingual-code-switching">Chapter 12: 多语种与混语训练 (Multilingual &amp; Code-Switching)</h1>
+<blockquote>
+<p><strong>本章定位</strong>：从单语种迈向“巴别塔”的工程指南。
+<strong>前置知识</strong>：建议完成 <strong>Chapter 3</strong>（数据基础）与 <strong>Chapter 4</strong>（文本规范化）。</p>
+</blockquote>
+<h2 id="1">1. 开篇：通天塔的构建艺术</h2>
+<p>在 ASR 发展的早期，多语种（Multilingual）意味着“拼盘”：为英语训练一个模型，为中文训练另一个，前端加一个语种分类器来路由。这种方法维护成本极高，且无法利用语种间的<strong>正迁移（Positive Transfer）</strong>。</p>
+<p>今天，无论是传统的 Conformer-Transducer 还是最新的 MLLM（如 Whisper, Qwen-Audio, Gemini Audio），目标都是<strong>通用语音模型（Universal Speech Model）</strong>：一个模型，同一套参数，处理 100+ 种语言，甚至处理句内混语（Code-Switching, CS）。</p>
+<h3 id="11">1.1 核心矛盾</h3>
+<p>训练多语种模型本质上是在解决三个冲突：</p>
+<ol>
+<li><strong>容量冲突（Capacity）</strong>：模型参数有限，英语学得太好，可能挤占斯瓦希里语的参数空间（Curse of Multilinguality）。</li>
+<li><strong>符号冲突（Script）</strong>：中文是表意字，英文是表音字母，日文是音节假名。如何让它们在一个词表中和平共处？</li>
+<li><strong>数据不平衡（Imbalance）</strong>：英语数据可能有 50,000 小时，而某些低资源语种（Low-resource language）只有 10 小时。直接混训会导致低资源语种被“淹没”。</li>
+</ol>
+<hr />
+<h2 id="2">2. 词表与建模单位：统一的基石</h2>
+<p>在单语种模型中，你只需要关心 "Character vs BPE"。在多语种模型中，词表（Vocabulary）设计决定了模型的上限。</p>
+<h3 id="21">2.1 常见策略对比</h3>
+<p>| 策略 | 说明 | 适用场景 | 致命缺陷 |</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+<th>适用场景</th>
+<th>致命缺陷</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Union of Characters</strong></td>
+<td>将所有语言的字符取集</td>
+<td>早期 E2E 模型</td>
+<td>加上中文/日文/韩文后，输出层（Softmax）巨大（&gt;10k），且拉丁语系序列过长，导致 Loss 难以平衡。</td>
+</tr>
+<tr>
+<td><strong>Unified Subword (BPE/SPM)</strong></td>
+<td><strong>工业界主流</strong>。在混合语料上训练 SentencePiece</td>
+<td>Conformer / Transducer /常规 ASR</td>
+<td>需要精心设计的采样策略，否则低资源语言会被切碎成字符甚至 Unknown。</td>
+</tr>
+<tr>
+<td><strong>Byte-level</strong></td>
+<td>直接对 UTF-8 字节建模（256 类）</td>
+<td>Whisper / MLLM</td>
+<td>序列长度膨胀（中文 1 字 = 3 Bytes）。需要强力的 Context 建模能力（Transformer）。</td>
+</tr>
+<tr>
+<td><strong>Phoneme (IPA)</strong></td>
+<td>统一映射到国际音标</td>
+<td>学术研究 / 语言学分析</td>
+<td>需要所有语种的高质量 G2P（Grapheme-to-Phoneme），工程落地极难。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-unified-sentencepiece">2.2 详解：Unified SentencePiece 的构建配方</h3>
+<p>这是目前最“稳”的方案。构建一个多语种 Tokenizer 并不是简单地 <code>cat all_text.txt | spm_train</code>。</p>
+<h4 id="1resampling-for-tokenizer">步骤 1：数据重采样（Resampling for Tokenizer）</h4>
+<p><strong>不要</strong>直接使用训练数据的自然分布来训练 Tokenizer。否则，你的词表里全是英文单词（如 "the", "ing"），而泰语或印地语全被打散成单字符。</p>
+<ul>
+<li><strong>做法</strong>：为 Tokenizer 训练准备一份独立的文本文件。在这份文件中，<strong>强制让每种语言的句子数量大致相等</strong>。</li>
+<li><strong>目的</strong>：确保低资源语种的常见词根（Subword）也能进入词表，保证所有语言的编码效率（Compression Rate）接近。</li>
+</ul>
+<h4 id="2character-coverage">步骤 2：强制字符覆盖（Character Coverage）</h4>
+<p>SentencePiece 默认覆盖率可能是 0.9995，这会丢弃极低频字符。</p>
+<ul>
+<li><strong>做法</strong>：设置 <code>character_coverage=1.0</code>，或者手动提取所有语种的<strong>基础字符集（Alphabet/Syllabary/Kanji）</strong>，作为 <code>user_defined_symbols</code> 或强制包含列表传入。</li>
+<li><strong>注意</strong>：对于中文/日文汉字，通常需要根据频次截断（如保留前 3000-5000 常用字），非常用字允许回退到 <code>&lt;UNK&gt;</code> 或拆解。</li>
+</ul>
+<h4 id="3">步骤 3：处理“共享”与“独占”</h4>
+<ul>
+<li><strong>Latin Script</strong>：英、法、德、西语共享字母。这是好事，有助于迁移（Transfer）。</li>
+<li><strong>Han Script</strong>：中、日、韩（部分）共享汉字。</li>
+<li><em>陷阱</em>：日文汉字“骨”（Bone）与简体中文“骨”写法微殊（Unicode 码点可能相同也可能不同，取决于 CJK 归并标准）。</li>
+<li><em>建议</em>：如果数据量足够，<strong>不要</strong>刻意区分语言标签（即不要变成 <code>zh_骨</code> 和 <code>ja_骨</code>），让模型通过上下文去学读音差异。</li>
+</ul>
+<h4 id="4byte-fallback">步骤 4：字节级回退（Byte Fallback）</h4>
+<p>这是 SentencePiece 的一个重要特性。当遇到 OOV 时，不输出 <code>&lt;UNK&gt;</code>，而是输出该字符的 UTF-8 字节序列。这对于多语种系统的鲁棒性至关重要。</p>
+<hr />
+<h2 id="3_1">3. 数据平衡：多语种训练的调节阀</h2>
+<p>一旦数据进入 DataLoader，核心问题就是：<strong>在一个 Batch 里，各种语言该占多少比例？</strong></p>
+<h3 id="31-temperature-sampling">3.1 温度采样 (Temperature Sampling) —— 行业标准</h3>
+<p>假设有  个语种，第  个语种的数据量占比为 。我们训练时重采样的概率  计算如下：</p>
+<p>其中  是温度（Temperature）：</p>
+<ul>
+<li>** (Natural)**：原始分布。高资源语种（如英文 10k 小时）主导梯度，低资源语种（10小时）几乎不更新参数。</li>
+<li>** (Uniform)**：均匀分布。所有语种概率相等。</li>
+<li>
+<p><em>风险</em>：10 小时的数据会被重复采样 1000 次，导致严重的过拟合（Overfitting）；10k 小时的数据没学完。</p>
+</li>
+<li>
+<p>** (Heuristic)**：这是一个经验上的“甜蜜点”（Sweet Spot），常用于 Multilingual BERT 和 ASR。它提升了低资源语种的可见度，同时保留了高资源语种的多样性。</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>Rule of Thumb (动态调整策略)</strong>
+不要整个训练周期只用一个 。</p>
+<ol>
+<li><strong>Warmup 阶段</strong>：使用  或 。先利用高资源语种把声学特征提取器（Encoder）训练稳定。</li>
+<li><strong>Main 阶段</strong>：切换到 。开始拉升低资源语种性能。</li>
+<li><strong>Finetune 阶段</strong>：如果某些语种仍不达标，可以对其进行专项 Upsampling。</li>
+</ol>
+</blockquote>
+<h3 id="32-batch-construction">3.2 批次构建策略 (Batch Construction)</h3>
+<ul>
+<li><strong>Mixed Batch</strong>：一个 Batch 内包含不同语种的样本。</li>
+<li><em>优点</em>：梯度的方向是多语种平均的，训练更稳定。</li>
+<li>
+<p><em>缺点</em>：需要处理不同语种的 Padding 浪费（如果语种间平均时长差异大）。</p>
+</li>
+<li>
+<p><strong>Homogeneous Batch</strong>：一个 Batch 只包含一种语言，但 Batch 之间按  轮换。</p>
+</li>
+<li><em>优点</em>：实现简单，便于针对特定语种加 Adapter。</li>
+<li><em>缺点</em>：梯度方向可能震荡。</li>
+</ul>
+<hr />
+<h2 id="4-lid">4. 架构演进：LID 与容量扩张</h2>
+<h3 id="41-lid">4.1 语言识别 (LID) 的处理</h3>
+<p>模型如何知道当前是哪种语言？</p>
+<ol>
+<li><strong>One-hot ID (Input)</strong>：在声学特征（Mel-spectrogram）后拼接一个全时序的 Language Embedding。</li>
+<li>
+<p><strong>Start Token (Output)</strong>：Decoder 的第一个 Token 预测（或强制输入）<code>&lt;|zh|&gt;</code> 或 <code>&lt;|en|&gt;</code>。
+* <em>Whisper 模式</em>：这是目前最流行的做法。它允许用户通过 Prompt 强制指定输出语言（例如做语音翻译）。</p>
+</li>
+<li>
+<p><strong>End-to-End LID</strong>：模型不仅输出文本，还作为一个分类任务输出 LID。这种多任务学习（Multi-task Learning）有助于分离语种特征。</p>
+</li>
+</ol>
+<h3 id="42-adapters">4.2 适配器 (Adapters) —— 解决容量瓶颈</h3>
+<p>当语种超过 50 种，单一模型的参数容量（Capacity）开始捉襟见肘。</p>
+<ul>
+<li>
+<p><strong>Language-Specific Adapters</strong>：
+保持主干（Backbone）冻结或共享，为每个语种插入小的 Adapter 模块（通常是 bottleneck linear layers）。</p>
+</li>
+<li>
+<p>位置：通常在 Feed-Forward Network (FFN) 后，或 Self-Attention 旁。</p>
+</li>
+<li><em>优点</em>：新增一种语言只需要微调 Adapter，不影响其他语言。</li>
+</ul>
+<h3 id="43-mixture-of-experts-moe">4.3 Mixture of Experts (MoE) —— 终极方案</h3>
+<p>对于超大规模模型（MLLM），MoE 是标配。</p>
+<ul>
+<li><strong>原理</strong>：将 FFN 层替换为多个“专家”网络。对于每个 Token（或每一帧），通过一个 Gating Network 决定激活哪几个专家。</li>
+<li><strong>在多语种中的意义</strong>：模型会自动学会将“中文专家”、“罗曼语族专家”分离开。推理时，处理中文帧只激活中文相关的参数，<strong>计算量不增加，但模型总容量增加了数十倍</strong>。</li>
+</ul>
+<hr />
+<h2 id="5-code-switching">5. 混语 (Code-Switching) 专项：最难的骨头</h2>
+<p>“帮我 <em>check</em> 一下这个 <em>bug</em> 怎么 <em>fix</em>。” —— 这种句内混语（Intra-sentential CS）是亚洲职场和生活中的常态，也是 ASR 的噩梦。</p>
+<h3 id="51">5.1 难点剖析</h3>
+<ol>
+<li><strong>声学边界模糊</strong>：发音人说英文单词时往往带有母语口音（Chinglish, Japanglish），音素发生形变。</li>
+<li><strong>语言模型困惑</strong>：中文后面接英文单词，打破了单语种 LM 的概率分布。</li>
+<li><strong>标注数据匮乏</strong>：高质量的 CS 数据（如 SEAME, TAL-CS）非常少。</li>
+</ol>
+<h3 id="52-data-synthesis">5.2 数据合成策略 (Data Synthesis)</h3>
+<p>既然真数据少，就必须造假数据。</p>
+<ul>
+<li><strong>Text-only Synthesis (for LM/MLLM)</strong>:</li>
+<li>利用规则或 LLM，将大量纯中文文本中的实体词（Entity）替换为英文。</li>
+<li>
+<p><em>Prompt</em>: "将这句话里的技术名词替换为英文：'由于内存溢出导致程序崩溃' -&gt; '由于 OOM 导致 App Crash'。"</p>
+</li>
+<li>
+<p><strong>TTS Augmentation (for Audio)</strong>:</p>
+</li>
+<li>
+<p>使用支持多语种的 TTS 引擎（如 VITS, Bark, Tortoise），输入混语文本生成音频。这是目前提升 CS 性能<strong>最有效</strong>的手段。</p>
+</li>
+<li>
+<p><strong>Audio Splicing (慎用)</strong>:</p>
+</li>
+<li>强行拼接中文音频和英文音频。效果通常很差，因为缺乏自然的协同发音（Co-articulation）和韵律过渡。</li>
+</ul>
+<h3 id="53-mer-mixed-error-rate">5.3 混语评测：MER (Mixed Error Rate)</h3>
+<p><strong>千万不要用单纯的 CER 或 WER 来评测混语模型。</strong></p>
+<ul>
+<li><strong>问题</strong>：如果用 CER，英文单词 "hello" 算 5 个字；如果用 WER，中文 "你好" 可能被当做一个词（这就依赖分词器的质量）。</li>
+<li><strong>解决方案</strong>：MER (Mixed Error Rate)。</li>
+<li><strong>计算算法</strong>：
+1. <strong>预处理</strong>：扫描 Ref 和 Hyp 文本。
+2. <strong>分类切分</strong>：</li>
+<li>遇到 CJK 字符：按<strong>字</strong>切分（Character-level）。</li>
+<li>遇到 Latin/Numeric 字符：按<strong>词</strong>切分（Word-level，通常以空格为界）。</li>
+</ul>
+<ol start="3">
+<li><strong>对齐计算</strong>：基于切分后的 List 计算 Levenshtein Distance</li>
+<li><strong>示例</strong>：
+* Ref: <code>我 需要 verify 账号</code> (Len=4: 我, 需要, verify, 账号)
+* Hyp: <code>我 需要 very fast 账号</code> (Len=5: 我, 需要, very, fast, 账号)
+* Error: 1 sub (verify-&gt;very), 1 ins (fast)。</li>
+</ol>
+<hr />
+<h2 id="6-mllm">6. MLLM 时代的借鉴与新问题</h2>
+<p>在 MLLM（如 GPT-4o, Qwen-Audio）时代，多语种训练依然遵循上述物理规律，但出现了一些新特性。</p>
+<h3 id="61-language-drift-hallucination">6.1 语言漂移 (Language Drift / Hallucination)</h3>
+<p>MLLM 有时会在长语音转写中“忘记”当前的任务是 ASR，开始做翻译或续写。</p>
+<ul>
+<li><strong>现象</strong>：音频是中文，模型写着写着变成了英文翻译。</li>
+<li><strong>原因</strong>：预训练数据中包含大量翻译对，或者 Instruction Tuning 时的指令不够明确。</li>
+<li><strong>对策</strong>：</li>
+<li><strong>Prompt Engineering</strong>：明确指令 <code>Transcribe the following audio verbatim in its original language.</code></li>
+<li><strong>Negative Constraint</strong>：在 Loss 中惩罚非目标语言的 Token（如果已知语种）。</li>
+</ul>
+<h3 id="62">6.2 脚本/文字系统规范化</h3>
+<p>MLLM 的输出极其自，它可能将粤语语音转写为书面语（Standard Chinese），或者将英文数字 "one hundred" 写成 "100"。</p>
+<ul>
+<li>这在传统 ASR 叫“错误”，在 MLLM 叫“特性”。</li>
+<li><strong>回扣 Chapter 4</strong>：必须建立严格的 ITN（Inverse Text Normalization）评测标准，否则无法衡量 MLLM 的真实准确率。</li>
+</ul>
+<hr />
+<h2 id="7">7. 本章小结</h2>
+<ol>
+<li><strong>词表是地基</strong>：使用 Unified SentencePiece，必须做<strong>数据重采样</strong>来平衡各语种的 Subword 粒度。</li>
+<li><strong>采样是杠杆</strong>：使用  的温度采样策略，动态平衡高/低资源语种的训练权重。</li>
+<li><strong>混语需特制</strong>：Code-Switching 依赖合成数据（TTS/LLM Rewrite）和专门的 MER 评测指标。</li>
+<li><strong>架构看规模</strong>：小模型用 Shared Encoder，中模型加 Adapter，大模型上 MoE。</li>
+</ol>
+<hr />
+<h2 id="8">8. 练习题</h2>
+<h3 id="_1">基础题</h3>
+<ol>
+<li>
+<p><strong>采样计算</strong>：假设英文数据 10,000 小时，泰语 100 小时。
+* 计算在自然分布（T=1）下，泰语样本出现的概率。
+* 计算在 T=5 时，泰语样本出的概率。
+* （答案中需体现“为什么 T=5 能救泰语”）。</p>
+</li>
+<li>
+<p><strong>Tokenizer 陷阱</strong>：在没有重采样的情况下，直接把 90% 的英文和 10% 的中文丢给 SentencePiece 训练，得到的词表会有什么特征？这对中文识别有什么坏处？</p>
+</li>
+</ol>
+<h3 id="_2">挑战题</h3>
+<ol start="3">
+<li><strong>混语指标设计</strong>：编写一个 Python 函数伪代码 <code>calculate_mer(ref, hyp)</code>，能够正确处理中英混合文本。要求处理英文大小写不敏感，且忽略多余空格。</li>
+<li><strong>架构思考</strong>：你正在设计一个流式会议转写系统，支持中、英、日、韩。为了降低推理延迟，你不能使用大型 MoE。请设计一个基于 Adapter 的方案，并详细说明在<strong>推理阶段</strong>如何决定使用哪个 Adapter（提示：需要一个快速的 LID 模块）。</li>
+</ol>
+<h3 id="_3">答案与提示</h3>
+<details>
+<summary>点击展开答案</summary>
+<ol>
+<li><strong>采样计算</strong></li>
+</ol>
+<ul>
+<li>总时长：10100 小时。</li>
+<li><strong>T=1 (自然)</strong>: 泰语概率 .</li>
+<li>
+<p><em>后果</em>：泰语在一个 Epoch 里仅出现极少次，梯度几乎被英文主导。</p>
+</li>
+<li>
+<p><strong>T=5</strong>:</p>
+</li>
+<li>Weight_En = </li>
+<li>Weight_Th = </li>
+<li>Total_Weight = </li>
+<li>泰语概率 .</li>
+<li><em>结论</em>：泰语的可见度提升了约 28 倍，模型能有效学习其特征。</li>
+</ul>
+<ol start="2">
+<li><strong>Tokenizer 陷阱</strong></li>
+</ol>
+<ul>
+<li><strong>特征</strong>：词表会被英文常见 Subword（如 "tion", "ing", "the"）占满。中文由于频率相对低（虽然总数多但单字频率被英文单词稀释），大部分汉字无法合并成词组，甚至很多生僻字被丢弃。</li>
+<li><strong>坏处</strong>：
+1. 中文序列变长（全变成单字），解码慢。
+2. 语义建模弱（无法将“人工”+“智能”作为一个整体建模）。
+3. 出现 <code>&lt;UNK&gt;</code> 的概率极高。</li>
+</ul>
+<ol start="3">
+<li><strong>MER 伪代码</strong></li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">unicodedata</span>
+
+<span class="k">def</span> <span class="nf">is_cjk</span><span class="p">(</span><span class="n">char</span><span class="p">):</span>
+    <span class="c1"># 简化的 CJK 判断范围</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\u4e00</span><span class="s1">&#39;</span> <span class="o">&lt;=</span> <span class="n">char</span> <span class="o">&lt;=</span> <span class="s1">&#39;</span><span class="se">\u9fff</span><span class="s1">&#39;</span>
+
+<span class="k">def</span> <span class="nf">tokenize_mixed</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_eng_word</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_cjk</span><span class="p">(</span><span class="n">char</span><span class="p">):</span>
+            <span class="c1"># 如果之前有英文单词，先flush</span>
+            <span class="k">if</span> <span class="n">current_eng_word</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_eng_word</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                <span class="n">current_eng_word</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span> <span class="c1"># 中文按字加</span>
+        <span class="k">elif</span> <span class="n">char</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_eng_word</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_eng_word</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                <span class="n">current_eng_word</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current_eng_word</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">current_eng_word</span><span class="p">:</span>
+        <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_eng_word</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">tokens</span>
+
+<span class="k">def</span> <span class="nf">calculate_mer</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">hyp</span><span class="p">):</span>
+    <span class="n">ref_toks</span> <span class="o">=</span> <span class="n">tokenize_mixed</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+    <span class="n">hyp_toks</span> <span class="o">=</span> <span class="n">tokenize_mixed</span><span class="p">(</span><span class="n">hyp</span><span class="p">)</span>
+    <span class="c1"># 此处调用标准的 edit_distance 函数</span>
+    <span class="n">ed</span> <span class="o">=</span> <span class="n">levenshtein</span><span class="p">(</span><span class="n">ref_toks</span><span class="p">,</span> <span class="n">hyp_toks</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ed</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_toks</span><span class="p">)</span>
+</code></pre></div>
+
+<ol start="4">
+<li><strong>Adapter 架构设计</strong></li>
+</ol>
+<ul>
+<li><strong>架构</strong>：Shared Conformer Encoder + Language Adapters (in FFN)。</li>
+<li><strong>推理流程</strong>：
+1. <strong>LID 分支</strong>：模型前 5 层 Encoder 输出一个特征，接一个小型的 LID Classifier。
+2. <strong>Lookahead</strong>：使用 VAD 切出的 Chunk 的前 0.5 秒音频先过 LID 分。
+3. <strong>路由</strong>：</li>
+<li>若 LID=ZH，加载/激活 ZH-Adapter。</li>
+<li>若 LID 置信度低，或检测到频繁切换，激活 "General/Mixed Adapter"（训练时需专门训练一个混语 Adapter）。</li>
+</ul>
+<ol start="4">
+<li><strong>解码</strong>：后续层使用选定的 Adapter 进行计算。</li>
+</ol>
+<ul>
+<li><strong>关键点</strong>：LID 必须极快且轻量，否则流式延迟不达标。</li>
+</ul>
+</details>
+<hr />
+<h2 id="9-gotchas">9. 常见陷阱与错误 (Gotchas)</h2>
+<h3 id="91-script-leaking">9.1 "脚本泄漏" (Script Leaking)</h3>
+<ul>
+<li><strong>现象</strong>：在训练日文 ASR 时，模型偶尔会输出简体中文特有的汉字（如“发”而不是“發”/“髪”），或者在训练中文 ASR 时输出日文汉字。</li>
+<li><strong>原因</strong>：词表中混杂了不同来源的汉字，且 Unicode 码点在某些字体下看起来一样，但实际不同。或者训练数据中有脏数据。</li>
+<li><strong>调试</strong>：使用 <code>OpenCC</code> 或 Unicode Range 过滤器清洗训练集，确保日文数据里没有纯简体字，中文数据里没有平假名。</li>
+</ul>
+<h3 id="92">9.2 "语种不平衡的灾难性遗忘"</h3>
+<ul>
+<li><strong>现象</strong>：Finetune 一个多语种底座模型到某个小语种上，结果英文能力完全丧失。</li>
+<li><strong>对策</strong>：始终保留一部分（如 10%）的高资源语种数据（Replay Buffer）在 Finetune 阶段混合训练，或者使用 Adapter 技术冻结底座。</li>
+</ul>
+<h3 id="93">9.3 混语合成数据的音色单一</h3>
+<ul>
+<li><strong>现象</strong>：使用单一 TTS 引擎合成大量 CS 数据，模型在真实场景（多人、多口音）下效果依然差。</li>
+<li><strong>原因</strong>：模型过拟合了 TTS 的特定音色和韵律。</li>
+<li><strong>对策</strong>：
+1. 使用多款 TTS 引擎。
+2. 对合成音频做激进的 SpecAugment 和噪声增强。
+3. <strong>Code-Switching 文本注入</strong>：只在文本层面做替换（Text injection），强迫模型学会“看到中文字输出英文词”的语言模型概率转移，而不完全依赖声学。</li>
+</ul>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter11.html" class="nav-link prev">← Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</a><a href="chapter13.html" class="nav-link next">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

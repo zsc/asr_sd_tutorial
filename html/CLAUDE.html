@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>Untitled</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 1: 任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 5: 音频预处理与切分：VAD、重叠、对齐与波形级增广</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 6: 特征与前端：从 MFCC 到可学习前端，再到 SSL 表征</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 7: RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 8：Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 9: Transformer 自监督过渡：Conformer、Transducer 与 SSL 微调</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 10: Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 15: 开源数据集大全：ASR / 多语种 / 会议 / 噪声 / Diarization</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Untitled</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <p>（交流可以用英文，所有文档中文）</p>
+<h2 id="_1">项目目标</h2>
+<p>编写一份面向 ASR 与 speaker diarization 训练（面向中英文语种及其他主要语种）的中文教程markdown要包含 RNN，Conv+LSTM，MLLM 各时代内容（MLLM 时代之前内容，要增加讨论对 MLLM 的借鉴意义），以及数据准备、测评的处理细节，如 text normalization, inverse text normalization，繁体中文 opencc，粤语/日语与中文汉字混淆（平假名片假名问题） ，多语言混合处理等（再想一些）。以及基于 MLLM 的新内容，如 RAG 的热词识别（再想一些）。以及常见开源数据集（多找一些）。
+要包含大量的习题和参考答案（答案默认折叠）。</p>
+<p>文件组织是 index.md + chapter1.md + ...
+不写代码。
+提供 rule-of-thumb。</p>
+<h2 id="_2">章节结构要求</h2>
+<p>每个章节应包含：</p>
+<ol>
+<li><strong>开篇段落</strong>：简要介绍本章内容和学习目标</li>
+<li><strong>文字论述</strong>：以文字论述为主，适当配上ASCII 图说明。</li>
+<li><strong>本章小结</strong>：总结关键概念和公式</li>
+<li><strong>练习题</strong>：
+   - 每章包含6-8道练习题
+   - 50%基础题（帮助熟悉材料）
+   - 50%挑战题（包括开放性思考题）
+   - 每题提供提示（Hint）
+   - 答案默认折叠，不包含代码</li>
+<li><strong>常见陷阱与错误</strong> (Gotchas)：每章包含该主题的常见错误和调试技巧</li>
+</ol>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter16.html" class="nav-link prev">← Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</a></nav>
+        </main>
+    </div>
+</body>
+</html>

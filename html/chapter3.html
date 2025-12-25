@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 1: 任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 5: 音频预处理与切分：VAD、重叠、对齐与波形级增广</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 6: 特征与前端：从 MFCC 到可学习前端，再到 SSL 表征</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 7: RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 8：Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 9: Transformer 自监督过渡：Conformer、Transducer 与 SSL 微调</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 10: Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 15: 开源数据集大全：ASR / 多语种 / 会议 / 噪声 / Diarization</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Untitled</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="chapter-3">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</h1>
+<h2 id="1">1. 开篇段落</h2>
+<p>在 ASR 与 Diarization 的开发中，数据往往占据了 80% 的工作量。从 RNN 时代的声学模型，到 Transformer 时代的端到端模型，再到如今的 MLLM（多模态大模型），数据处理的范式发生了巨大的迁移：从<strong>“特征工程”</strong>变成了<strong>“数据工程”</strong>。</p>
+<p>早期模型（GMM-HMM）需要极其精确的音素级对齐；端到端模型（E2E）开始容忍较粗糙的对齐；而 MLLM 则引入了“指令微调（Instruction Tuning）”和“上下文学习（In-Context Learning）”，要求数据不仅要有音频和文本，还要有<strong>意图（Intent）和知识（Knowledge）</strong>。</p>
+<p>本章将作为“数据工程”的实战册，指导你如何从杂乱的原始录音中提炼出高质量的训练燃料。我们将深入探讨合规性红线、物理音频规范、防泄漏的切分策略、强制对齐（Forced Alignment）流水线，以及如何为下一代语音模型构建 JSONL 格式的指令数据。</p>
+<p><strong>本章学习目标</strong>：</p>
+<ol>
+<li><strong>合规风控</strong>：建立数据许可（License）审查机制，识别“有毒”数据。</li>
+<li><strong>音频工程</strong>：掌握 <code>ffmpeg</code>/<code>sox</code> 的标准化处理，理解采样率与编码的深层影响。</li>
+<li><strong>切分架构</strong>：设计严密的 Train/Dev/Test 切分方案，杜绝 Session/Speaker 泄漏。</li>
+<li><strong>自动流水线</strong>：利用 MFA/CTC-Segmentation 实现大规模数据的自动清洗与对齐。</li>
+<li><strong>MLLM 适配</strong>：学会构造包含 Instruction、Prompt 和 Context 的新型训练数据。</li>
+</ol>
+<hr />
+<h2 id="2">2. 文字论述</h2>
+<h3 id="31">3.1 数据许可与“可用性分级”</h3>
+<p>数据污染是不可逆的。一旦商业模型在训练中见过了 NC（非商用）数据，整个模型的法律地位岌岌可危。</p>
+<h4 id="311">3.1.1 许可红绿灯</h4>
+<ul>
+<li>🟢 <strong>Green (安全商用)</strong>:</li>
+<li><strong>CC-0 (Public Domain)</strong>: 如 LibriSpeech（部分）。</li>
+<li><strong>CC-BY (Attribution)</strong>: 需保留署名文件。如 Common Voice (部分版本，需仔细检查)。</li>
+<li>
+<p><strong>Apache 2.0 / MIT</strong>: 常见于代码库附带的小型数据集。</p>
+</li>
+<li>
+<p>🟡 <strong>Yellow (需购买/授权)</strong>:</p>
+</li>
+<li><strong>LDC (Linguistic Data Consortium)</strong>: 质量极高，价格昂贵，通常购买后拥有商用权。</li>
+<li>
+<p><strong>Data Tang / MagicData (付费版)</strong>: 商业数据供应商。</p>
+</li>
+<li>
+<p>🔴 <strong>Red (绝对禁止商用)</strong>:</p>
+</li>
+<li><strong>CC-BY-NC (Non-Commercial)</strong>: 学术界最常用的许可（如 AISHELL-3, BigFish 等）。<strong>企业研发人员请务必在下载脚本中设置黑名单过滤此类数据。</strong></li>
+<li><strong>YouTube/Podcast 爬取</strong>: 除非不仅是 Public Domain 且确认内容未侵犯第三方版权，否则默认视为<strong>高风险</strong>。</li>
+</ul>
+<h4 id="312-pii-personally-identifiable-information">3.1.2 隐私与 PII (Personally Identifiable Information)</h4>
+<p>在欧盟 GDPR 和中国《个人信息保护法》下，语音生物特征属于敏感个人信息。</p>
+<ul>
+<li><strong>音频脱敏</strong>: 对变声处理通常会破坏 ASR 特征，因此重点在于<strong>授权书</strong>。</li>
+<li><strong>文本脱敏</strong>: 训练前必须替换姓名、身份证号、电话号码、银行卡号。</li>
+<li><em>替换策略</em>: <code>13800000000</code>  <code>&lt;PHONE_NUMBER&gt;</code> 或随机生成的假号码（保持韵律特征）。</li>
+</ul>
+<h3 id="32">3.2 音频基础规范：工程视角的参数选择</h3>
+<p>统一的输入格式能显著降低 DataLoader 的 CPU 开销。</p>
+<h4 id="321-sample-rate">3.2.1 采样率 (Sample Rate)</h4>
+<ul>
+<li><strong>16kHz (Wideband)</strong>: ASR 黄金标准。根据奈奎斯特采样定理，能覆盖 8kHz 以下频率，包含了人类语音绝大部分的可懂度信息（辅音的高频部分）。</li>
+<li><strong>8kHz (Narrowband)</strong>: 电话系统标准。如果业务场景是电话客服，<strong>必须</strong>包含 8kHz 数据，或者将 16kHz 下采样训练。</li>
+<li><strong>Up-sampling 的陷阱</strong>: 绝对不要把 8kHz 插值强转为 16kHz 混入训练，这会产生“空频带”，导致模型在真实 16kHz 场景下对高频噪声过敏。</li>
+</ul>
+<h4 id="322">3.2.2 码与容器</h4>
+<ul>
+<li><strong>PCM WAV (signed 16-bit)</strong>: 训练首选。解码速度最快，无压缩损耗。</li>
+<li><strong>FLAC</strong>: 存储首选。无损压缩（节省 ~40% 空间），解码开销适中。</li>
+<li><strong>MP3/AAC</strong>: <strong>特征杀手</strong>。心理声学模型会切除“人耳听不见但模型可能需要”的频谱细节。</li>
+<li><em>Rule-of-Thumb</em>: 如果原始数据是 MP3，训练时<strong>不要</strong>转为 WAV 存储（浪费空间且无法找回音质），直接解码读取，但需在 Data Augmentation 中加入 Codec Augmentation（模拟压缩伪影）以增强鲁棒性。</li>
+</ul>
+<h4 id="323">3.2.3 多通道与阵列</h4>
+<ul>
+<li><strong>Diarization/Meeting 场景</strong>: 尽量保留多通道原始音频。</li>
+<li><strong>波束形成 (Beamforming)</strong>: 建议在训练时<strong>在线</strong>随机选取一个通道，或者做前端增强合成单通道。<strong>不要只用增强后的音频训练</strong>，否则模型会丧失对混响和噪声的鲁棒性。</li>
+</ul>
+<h3 id="33">3.3 标注粒度与格式</h3>
+<h4 id="331-asr">3.3.1 ASR 标注</h4>
+<ul>
+<li><strong>Verbatim (逐字)</strong>: 包含 "um", "uh", 重复, 结巴。适合训练转模型。</li>
+<li><strong>Cleaned (整理后)</strong>: 去除口癖。适合字幕生成。<strong>注意：如果音频有 "um" 但文本没有，会导致 CTC/Transducer 训练时的对齐混乱。建议训练由 Verbatim 文本驱动，下游任务再做 ITN。</strong></li>
+</ul>
+<h4 id="332-diarization-rttm">3.3.2 Diarization 标注 (RTTM 标准)</h4>
+<p>RTTM (Rich Transcription Time Marked) 是 NIST 评测的标准格式。</p>
+<div class="codehilite"><pre><span></span><code>Type  File  Ch  Start   Dur     Ortho  SType  Name     Conf
+SPEAKER file1 1   0.50    3.25    &lt;NA&gt;   &lt;NA&gt;   spk_01   &lt;NA&gt;
+SPEAKER file1 1   4.00    2.10    &lt;NA&gt;   &lt;NA&gt;   spk_02   &lt;NA&gt;
+</code></pre></div>
+
+<ul>
+<li><strong>Overlap (重叠)</strong>: 高级 Diarization 系统的关键。如 0.5s-3.75s 是 spk_01，3.5s-5.0s 是 spk_02，则 3.5s-3.75s 为重叠区。标注必须精确覆盖重叠，否则 EEND (End-to-End Neural Diarization) 模型无法收敛。</li>
+</ul>
+<h3 id="34">3.4 切分策略：防泄漏的艺术</h3>
+<p>除了 Chapter 1 提到的 Speaker/Session 泄漏，还有更隐蔽的泄漏方式。</p>
+<p><strong>[ASCII Diagram: 数据集切分层级]</strong></p>
+<div class="codehilite"><pre><span></span><code>Level 1: Source Split (最安全)
+[  Conference A (Train)  ]   [  Conference B (Dev)  ]   [  Conference C (Test)  ]
+        |                           |                           |
+        V                           V                           V
+   包含 spk_1 ~ spk_50        包含 spk_51 ~ spk_60       包含 spk_61 ~ spk_70
+
+Level 2: Speaker Split (次级安全 - 适用于单人朗读)
+[  Spk 1 (Train) ] ... [ Spk 80 (Train) ]  ||  [ Spk 81 (Dev) ] ... [ Spk 100 (Test) ]
+
+Level 3: Utterance Split (Random Shuffle) -&gt; ☠️ 灾难级错误
+[ Spk1_utt1 (Train) ] ... [ Spk1_utt2 (Test) ] ...
+Result: 测试集 WER 1%，上线 WER 30%。模型记住了 Spk1 的麦克风底噪。
+</code></pre></div>
+
+<ul>
+<li><strong>Stratified Sampling (分层采样)</strong>: 确保 Test Set 覆盖：</li>
+<li><strong>性别比例</strong>: 1:1</li>
+<li><strong>时长分布</strong>: 短句 (1s) 到长句 (15s) 都要有。</li>
+<li><strong>信噪比 (SNR)</strong>: 安静环境与嘈杂环境。</li>
+<li><strong>口音</strong>: 如果做中文 ASR，测试集必须包含非标准普通话（川普、广普）。</li>
+</ul>
+<h3 id="35-forced-alignment">3.5 强制对齐 (Forced Alignment) 与自动化洗</h3>
+<p>面对 10,000 小时的原始录音（如会议录音、电视剧），人工切分是不可能的。必须构建自动流水线。</p>
+<p><strong>推荐工具链</strong>:</p>
+<ol>
+<li><strong>Montreal Forced Aligner (MFA)</strong>: 基于 Kaldi GMM-HMM。安装略繁琐，但边界极其精准。</li>
+<li><strong>CTC-Segmentation</strong>: 基于 PyTorch 和预训练 CTC 模型。对噪声鲁棒性更好，更适合现代流程。</li>
+</ol>
+<p><strong>[ASCII Diagram: 自动切分清洗流水线]</strong></p>
+<div class="codehilite"><pre><span></span><code>Raw Audio (1 Hour) ------------------------+
+      |                                    |
+      V                                    V
++-------------+                    +--------------+
+|     VAD     | (粗切分)            |  ASR Model   | (辅助)
++-------------+                    +--------------+
+      |                                    |
+      V                                    V
+[Active Segments]                  [Loose Alignment Logits]
+      |                                    |
+      +---------------+--------------------+
+                      |
+                      V
+             +------------------+
+             | CTC-Segmentation | (核心算法)
+             +------------------+
+                      |
+        +-------------+-------------+
+        |                           |
+[Aligned Segments]          [Confidence Score]
+(Start: 10.5s, End: 15.2s)  (Score: -0.2)
+        |                           |
+        V                           V
+   +----------+             +----------------+
+   |  Slicer  | &lt;---------- | Quality Filter | (If score &lt; threshold: DROP)
+   +----------+             +----------------+
+        |
+        V
+Final Dataset (Chunks &lt; 30s)
+</code></pre></div>
+
+<p><strong>工程细节 (Rule-of-Thumb)</strong>:</p>
+<ul>
+<li><strong>切分时长</strong>: 训练 ASR 的最佳 chunk 时长为 <strong>10s - 30s</strong>。太短导致 Transformer 没上下文，太长导致 OOM (Out of Memory)。</li>
+<li><strong>边界扩充</strong>: 在 VAD 切分点前后各加 <strong>0.1s - 0.2s</strong> 的 padding，防止切掉首尾辅音。</li>
+<li><strong>丢弃标准</strong>:</li>
+<li>时长 &lt; 0.5s（无意义）。</li>
+<li>时长 &gt; 30s（可能含大段静音或 VAD 失败）</li>
+<li>字符/时长比 (CPS) &gt; 10 (语速过快，通常是对齐错误) 或 &lt; 1 (全是噪音)。</li>
+</ul>
+<h3 id="36-mllm">3.6 面向 MLLM 的数据构造</h3>
+<p>MLLM (如 Qwen-Audio, GPT-4o) 的输入不再是单纯的 <code>(wav, text)</code> 对，而是结构化的 Instruction Data。</p>
+<h4 id="361-jsonl">3.6.1 数据结构示例 (JSONL)</h4>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;train_001&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;audio&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path/to/audio.wav&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">5.2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;conversations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;|audio_bos|&gt;&lt;|AUDIO|&gt;&lt;|audio_eos|&gt;请将这段语音转写为文本，并自动纠正其中的口语错误（如重复、结巴）。&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;今天天气真不错，我们一起去公园吧。&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;hotwords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;公园&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;天气&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;speaker_profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Young female, Bejing accent&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h4 id="362-context-injection">3.6.2 Context Injection (上下文注入)</h4>
+<p>为了训练模型支持 RAG（检索增强生成）或热词（Biasing），需要在训练数据中<strong>动态合成</strong>上下文。</p>
+<ul>
+<li><strong>正例构造</strong>: 从 Ground Truth 中随机抽取实体词放入 Context 字段，要求模型在输出时予以关注。</li>
+<li><strong>负例构造 (Hard Negatives)</strong>: 在 Context 中故意放入音频中<em>没有</em>出现的相似词（如音频是“张三”，Context 给“张山”），训练模型<strong>不被误导</strong>的能力。</li>
+</ul>
+<hr />
+<h2 id="3">3. 本章小结</h2>
+<ol>
+<li><strong>数据决定上限</strong>: 任何模型架构的改进都无法弥补 Session 泄漏导致的评测虚高。</li>
+<li><strong>对齐即正义</strong>: 掌握 CTC-Segmentation 或 MFA 是处理大规模非监督/弱监督数据的核心能力。</li>
+<li><strong>物理一致性</strong>: 严格统一采样率（16kHz）和位深，慎用 MP3。</li>
+<li><strong>MLLM 范式</strong>: 数据准备需从单纯的“转写”转向“指令-响应”对，包含上下文注入与多任务 Prompt。</li>
+</ol>
+<hr />
+<h2 id="4">4. 练习题</h2>
+<h3 id="_1">基础题</h3>
+<p><strong>Q1: 在处理多通道会议录音（例如 8 个麦克风阵列）进行单通道 ASR 训练时，简单地将 8 个通道平均（Average）成一个通道会有什么物理问题？</strong></p>
+<details>
+<summary>点查看答案与提示</summary>
+<ul>
+<li><strong>提示</strong>: 考虑声波的相位（Phase）和延迟（Delay）。</li>
+<li><strong>答案</strong>:</li>
+<li>由于声源到达不同麦克风的距离不同，存在时间延迟（Time Delay）。</li>
+<li>直接平均会导致<strong>梳状滤波效应（Comb Filtering）</strong>。某些频率因为相位相反相消（Destructive Interference），导致信号失真、高频丢失，声音听起来像是在水管里。</li>
+<li><strong>正确做法</strong>: 随机选一个通道（Random Selection）或使用专业的波束形成（Beamforming）算法（如 MVDR）合成。</li>
+</ul>
+</details>
+<p><strong>Q2: 为什么在计算 ASR 数据集的时长时，要区分“音频总时长”和“有效语音时长”？差异通常有多大？</strong></p>
+<details>
+<summary>点击查看答案与提示</summary>
+<ul>
+<li><strong>提示</strong>: VAD (Voice Activity Detection)。</li>
+<li><strong>答案</strong>:</li>
+<li>原始录音（特别是会议或对话）包含大量静音、思考停顿和背景噪声。</li>
+<li><strong>差异</strong>: 在自然对话中，有效语音（Speech）通常只占总时长的 40%-60%。</li>
+<li><strong>影响</strong>: 如果按总时长计算 Epoch，会导致模型在大量的 Silence 上浪费算力，甚至过拟合静音模式。训练时应仅计算有效 Speech 帧。</li>
+</ul>
+</details>
+<p><strong>Q3: 使用 <code>sox</code> 将 48kHz 音频下采样到 16kHz 时，如果不加低通滤波器（Low-pass filter）会发生什么？</strong></p>
+<details>
+<summary>点击查看答案与提示</summary>
+<ul>
+<li><strong>提示</strong>: 混叠（Aliasing）。</li>
+<li><strong>答案</strong>:</li>
+<li>会发生<strong>混叠效应</strong>。高于 8kHz（新奈奎斯特频率）的频率成分会“折叠”回低频段（0-8kHz）。</li>
+<li>例如，原始音频中的 10kHz 信号，在 16kHz 采样率下会表现为  的伪影噪声。</li>
+<li><strong>注</strong>: 现代工具如 <code>sox</code> 或 <code>ffmpeg</code> 默认会在下采样前自动应用低通滤波器，但手写 DSP 代码时需极度小心。</li>
+</ul>
+</details>
+<h3 id="_2">挑战题</h3>
+<p><strong>Q4 (场景设计): 你正在为一家医院开发“医生查房录音”ASR 系统。数据极其敏感（不能出内网），且包含大量医学术语。你只有 10 小时的医生真录音，但有 10,000 小时的通用开源数据（AISHELL 等）。请设计数据混合与训练策略。</strong></p>
+<details>
+<summary>点击查看答案与提示</summary>
+<ul>
+<li><strong>提示</strong>: Domain Adaptation, Mixing Ratio, Lexicon。</li>
+<li><strong>答案</strong>:
+1. <strong>数据混合 (Mixing)</strong>: 通用数据用于学习声学特征（发音），医疗数据用于适应领域。训练时每个 Batch 保持一定比例（如 1:1 或 1:2），即使医疗数据很少，也要通过 <strong>Over-sampling (重采样)</strong> 保证模型每一轮都能反复看到。
+2. <strong>词表增强 (Lexicon)</strong>: 必须构建医疗术语表。在 Chapter 4 中会讲到，利用术语表生成合成文本（TTS）或做 Text-only 的 LM 训练来增强对生僻药名的识别。
+3. <strong>切分</strong>: 10 小时真实数据极其宝贵，建议拿出 1-2 小时做 Dev/Test，剩下 8 小时全部混入 Train。<strong>绝对不要</strong>只用通用数据训练，然后指望在医疗 Dev 上调参。</li>
+</ul>
+</details>
+<p><strong>Q5 (MLLM): 你想训练一个能根据语音语调判断情感高兴/愤怒/中性）的 MLLM。你现有的数据只有 ASR 转写文本。如何利用开源工具低成本地“伪造”情感标签来启动训练？</strong></p>
+<details>
+<summary>点击查看答案与提示</summary>
+<ul>
+<li><strong>提示</strong>: SER (Speech Emotion Recognition) 预训练模型。</li>
+<li><strong>答案</strong>:
+1. <strong>Teacher Model</strong>: 下载一个开源的语音情感识别模型（如基于 Wav2Vec2-Emotion 或 distil-wav2vec2-audio-better-com）。
+2. <strong>Pseudo-labeling</strong>: 用该模型跑一遍你的 ASR 数据集，获取每个片段的情感 Logits 或分类结果。
+3. <strong>清洗</strong>: 设定高阈值（如 Conf &gt; 0.9），只保留置信度极高的样本作为“伪真值”。
+4. <strong>构造指令</strong>: Instruction: "Recognize the speech and identify the speaker's emotion." -&gt; Output: "(Angry) Get out of here!"</li>
+</ul>
+</details>
+<hr />
+<h2 id="5-gotchas">5. 常见陷阱与错误 (Gotchas)</h2>
+<h3 id="51-oov-out-of-vocabulary">5.1 OOV (Out-of-Vocabulary) 爆炸</h3>
+<ul>
+<li><strong>现象</strong>: 训练 CER 很低，但测试时只要遇到人名地名就全错。</li>
+<li><strong>原因</strong>: 英文 BPE 或中文 Char 词表没覆盖生僻字。</li>
+<li><strong>Gotcha</strong>: 很多开源中文词表只有 3000-5000 常用字。对于人名（如“李<strong>鱏</strong>”），如果词表中没有，模型只能输出 <code>&lt;UNK&gt;</code> 或读音相近的错字。</li>
+<li><strong>对策</strong>: 检查训练集覆盖率。如果做通用 ASR，中文字表应在 6000-8000 字左右；如果做 MLLM，通常沿用 LLM 的大词表（50k-100k token）。</li>
+</ul>
+<h3 id="52-soxffmpeg">5.2 错误的 sox/ffmpeg 管道</h3>
+<ul>
+<li><strong>错误代码</strong>: <code>ffmpeg -i input.mp3 -ar 16000 output.wav</code> (看似没问题)</li>
+<li><strong>陷阱</strong>: 如果原音频是立体声（Stereo），ffmpeg 默认会合并通道或只取左声道（取决于版本和参数），可能导致相位抵消（见练习题 Q1）。</li>
+<li><strong>修正</strong>: 显式指定通道处理策略。例如 <code>ffmpeg -i input.mp3 -ac 1 -ar 16000 output.wav</code> (混合为单声道，需确认无相位问题) 或 <code>-map_channel</code> 提取特定通道。</li>
+</ul>
+<h3 id="53-text-normalization">5.3 忽视 Text Normalization 对齐的影响</h3>
+<ul>
+<li><strong>现象</strong>: 音频里说 "The price is $5"，文本标注是 "The price is five dollars"。</li>
+<li><strong>Gotcha</strong>: 强制对齐工具会因为 "" 符号上。</li>
+<li><strong>对策</strong>: 在强制对齐<strong>前</strong>，必须将文本做 <strong>Verbalization</strong>（口语化展开），即 <code>$5</code> -&gt; <code>five dollars</code>。这是 Chapter 4 的核心内容，但在 Chapter 3 的对齐阶段就得预处理。</li>
+</ul>
+<h3 id="54-loss-wer">5.4 验证集 Loss 很低，WER 很高</h3>
+<ul>
+<li><strong>原因</strong>: Teacher Forcing 的陷阱。</li>
+<li><strong>Gotcha</strong>: 训练时模型总是能看到上一个正确的 Ground Truth Token，所以 Loss 降得很快。但推理（Inference）时模型只能靠自己生成的历史，一步错步步错（Exposure Bias）。</li>
+<li><strong>对策</strong>: 尽早跑完整的 Decode 评测（Beam Search），不要只看 Loss。Loss 和 WER 在训练后期往往不成线性关系。</li>
+</ul>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter2.html" class="nav-link prev">← Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</a><a href="chapter4.html" class="nav-link next">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 1: 任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 5: 音频预处理与切分：VAD、重叠、对齐与波形级增广</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 6: 特征与前端：从 MFCC 到可学习前端，再到 SSL 表征</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 7: RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 8：Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 9: Transformer 自监督过渡：Conformer、Transducer 与 SSL 微调</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 10: Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 15: 开源数据集大全：ASR / 多语种 / 会议 / 噪声 / Diarization</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Untitled</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="chapter-13-asr-wercermer-diarization-derjer">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</h1>
+<h2 id="131">13.1 开篇与学习目标</h2>
+<p>在语音识别（ASR）和说话人日志（Diarization）的开发周期中，评测（Evaluation）往往是最容易被低估，却最容易导致项目失败的环节。<strong>“跑出一个指标”很容易，但“跑出一个可信、可比、能指导优化的指标”很难</strong>。</p>
+<p>初学者常犯的错误包括：被文本规范化（Normalization）差异误导，误以为模型提升了；或者在 Diarization 中忽视了 Collar（容差）设置，导致无法与 SOTA 论文对齐。而在 MLLM 时代，传统的“字面匹配”更面临着“语义正确但字面不同”的巨大挑战</p>
+<p><strong>本章学习目标</strong>：</p>
+<ol>
+<li><strong>掌握核心算法</strong>：不仅是公式，更要理解 WER/CER/MER 的对齐逻辑（Levenshtein）与 DER 的最佳映射（Hungarian Algorithm）。</li>
+<li><strong>攻克文本规范化（TN）</strong>：建立一套工业级的 Eval Pipeline，解决大小写、标点、数字（1 vs one）、简繁体对指标的干扰。</li>
+<li><strong>多语种与混语（Code-Switching）</strong>：掌握混合错误率（MER）的计算逻辑，处理中英日混杂场景。</li>
+<li><strong>Diarization 的“黑魔法”</strong>：透彻理解 Collar、Overlap、VAD 对 DER 的蝴蝶效应。</li>
+<li><strong>MLLM 与 RAG 新评测</strong>：学习如何评测语义一致性、幻觉率（Hallucination Rate）以及热词召回率。</li>
+</ol>
+<hr />
+<h2 id="132-asr">13.2 ASR 核心指标：从编辑距离到混合策略</h2>
+<h3 id="1321-levenshtein-distance-wer">13.2.1 基础：Levenshtein Distance 与 WER</h3>
+<p>ASR 评测的核心是计算<strong>假设文本（Hypothesis, Hyp）</strong>与<strong>参考文本（Reference, Ref）</strong>之间的差异。这本质上是一个动态规划问题，即寻找最小编辑距离。</p>
+<ul>
+<li><strong>S (Substitution, 替换)</strong>：把 <code>cat</code> 认成了 <code>cap</code>。这是声学模型最常见的错误。</li>
+<li><strong>D (Deletion, 删除)</strong>：漏识别了某个词。通常发生在语速极快或声音极小处。</li>
+<li><strong>I (Insertion, 插入)</strong>：多识别了不存在的词。通常由背景噪声或长时间静音（导致模型强行解码）引起。</li>
+<li>****：参考文本的总词数。</li>
+<li><strong>关键点</strong>：分母必须是 <strong>Reference</strong> 的长度，绝不能是 Hypothesis 的长度。</li>
+<li><strong>推论</strong>：WER 可以超过 100%。如果 Ref 是 "No"，Hyp 是 "No no no no no"，则 。</li>
+</ul>
+<h3 id="1322-word-wer-vs-character-cer">13.2.2 粒度选择：Word (WER) vs Character (CER)</h3>
+<p>| 语种/场景 | 指标 | 原因 | 示例 |</p>
+<table>
+<thead>
+<tr>
+<th>语种/场景</th>
+<th>指标</th>
+<th>原因</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>英语/印欧语系</strong></td>
+<td><strong>WER</strong></td>
+<td>单词是最小语义单位，空格天然分词。</td>
+<td><code>apple</code> 错成 <code>apply</code> 算 1 个错，不算 2 个字符错。</td>
+</tr>
+<tr>
+<td><strong>中文</strong></td>
+<td><strong>CER</strong></td>
+<td>汉字之间无空格，分词标准（结巴/HanLP）不统一会导致指标波动。</td>
+<td>“南京市长”若分词为“南京/市长”或“京市/长”，会影响 WER，但 CER 恒定。</td>
+</tr>
+<tr>
+<td><strong>日语</strong></td>
+<td><strong>CER</strong></td>
+<td>混合了假名和汉字，通常按字符（Character）计算。</td>
+<td><code>ご飯</code> (2 chars) vs <code>ごはん</code> (3 chars) 的对齐需特殊处理（见下文）。</td>
+</tr>
+<tr>
+<td><strong>韩语</strong></td>
+<td><strong>CER/WER</strong></td>
+<td>视业务而定。韩语有空格（Eojeol），但形态变化复杂，通常推荐 CER 或字/词素级 WER。</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1323-mer-mixed-error-rate">13.2.3 进阶：混合错误率 (MER, Mixed Error Rate)</h3>
+<p>在 <strong>Code-Switching（如中英混杂）</strong> 场景下，单纯用 WER 或 CER 都不公平：</p>
+<ul>
+<li>用 WER：中文分词错误（如“人工智能”切成“人工 智能”）会被误判为 ASR 错误。</li>
+<li>用 CER：英文单词 <code>Constitution</code> 被拆成 12 个字母，权重是中文汉字 <code>宪</code> 的 12 倍，导致英文错误主导指标。</li>
+</ul>
+<p><strong>MER 计算逻辑：</strong></p>
+<blockquote>
+<p><strong>Rule of Thumb</strong>: “见到 CJK 字符按字切，见到 Latin 字符串按词切。”</p>
+</blockquote>
+<p><strong>算法步骤演示</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Ref</span><span class="p">:</span> <span class="s2">&quot;我 在 Office 开 会&quot;</span>
+<span class="n">Hyp</span><span class="p">:</span> <span class="s2">&quot;我 在 office 开会&quot;</span>
+
+<span class="n">Step</span> <span class="mi">1</span><span class="p">:</span> <span class="n">Tokenization</span> <span class="p">(</span><span class="n">智能切分</span><span class="p">)</span>
+<span class="n">Ref</span> <span class="n">Tokens</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;我&#39;</span><span class="p">,</span> <span class="s1">&#39;在&#39;</span><span class="p">,</span> <span class="s1">&#39;Office&#39;</span><span class="p">,</span> <span class="s1">&#39;开&#39;</span><span class="p">,</span> <span class="s1">&#39;会&#39;</span><span class="p">]</span>  <span class="p">(</span><span class="mi">5</span> <span class="n">tokens</span><span class="p">)</span>
+<span class="n">Hyp</span> <span class="n">Tokens</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;我&#39;</span><span class="p">,</span> <span class="s1">&#39;在&#39;</span><span class="p">,</span> <span class="s1">&#39;office&#39;</span><span class="p">,</span> <span class="s1">&#39;开&#39;</span><span class="p">,</span> <span class="s1">&#39;会&#39;</span><span class="p">]</span>  <span class="p">(</span><span class="mi">5</span> <span class="n">tokens</span><span class="p">,</span> <span class="s2">&quot;开会&quot;</span><span class="n">被拆开</span><span class="p">)</span>
+
+<span class="n">Step</span> <span class="mi">2</span><span class="p">:</span> <span class="n">Normalization</span> <span class="p">(</span><span class="n">规范化</span><span class="p">)</span>
+<span class="n">Ref</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;我&#39;</span><span class="p">,</span> <span class="s1">&#39;在&#39;</span><span class="p">,</span> <span class="s1">&#39;office&#39;</span><span class="p">,</span> <span class="s1">&#39;开&#39;</span><span class="p">,</span> <span class="s1">&#39;会&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">Lowercased</span><span class="p">)</span>
+<span class="n">Hyp</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;我&#39;</span><span class="p">,</span> <span class="s1">&#39;在&#39;</span><span class="p">,</span> <span class="s1">&#39;office&#39;</span><span class="p">,</span> <span class="s1">&#39;开&#39;</span><span class="p">,</span> <span class="s1">&#39;会&#39;</span><span class="p">]</span>
+
+<span class="n">Step</span> <span class="mi">3</span><span class="p">:</span> <span class="n">Levenshtein</span> <span class="n">Alignment</span>
+<span class="n">Result</span><span class="p">:</span> <span class="n">Match</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">Error</span><span class="o">=</span><span class="mf">0.</span> <span class="n">MER</span><span class="o">=</span><span class="mf">0.0</span><span class="o">%</span>
+</code></pre></div>
+
+<hr />
+<h2 id="133-tn">13.3 文本规范化（TN）：评测的“隐形杀手”</h2>
+<p><strong>如果评测脚本没有统一的 TN Pipeline，任何 WER 的改进都是不可信的。</strong></p>
+<h3 id="1331">13.3.1 必须处理的规范化层级</h3>
+<p>建议构建一个标准化的 <code>normalize_for_eval(text)</code> 函数，包含以下层级：</p>
+<ol>
+<li>
+<p><strong>Unicode 规范化 (NFKC)</strong>：
+* 解决全角/半角问题：<code>Ａ</code>  <code>A</code>, <code>１</code>  <code>1</code>。
+* 解决组合字符问题：<code>e</code> + <code>´</code>  <code>é</code>。</p>
+</li>
+<li>
+<p><strong>大小写 (Casing)</strong>：
+* 通常转小写（Lowercasing）。
+* <em>例外</em>：若评测实体识别（如 <code>Apple</code> 公司 vs <code>apple</code> 水果），则需保留。</p>
+</li>
+<li>
+<p><strong>标点符号 (Punctuation)</strong>：
+* <strong>删除策略</strong>：大多数 ASR 评测会移除 <code>,.?!;:"</code> 等符号。
+* <strong>保留策略</strong>：如果模型是 "Rich Transcription"（含标点预测），则标点应作为独立 Token 参与 WER 计算。
+* <strong>陷阱</strong>：中文的顿号 <code>、</code> 和英文逗号 <code>,</code> 在混语中极易混淆，建议全部映射为空格。</p>
+</li>
+<li>
+<p><strong>空白符整理</strong>：
+* <code>strip()</code> 去首尾，<code>re.sub(r'\s+', ' ', text)</code> 将连续空格合并为一个。</p>
+</li>
+</ol>
+<h3 id="1332">13.3.2 棘手的“数字与多义性”问题</h3>
+<p>| 原始文本 | ASR 输出可能 | 评测策略 |</p>
+<table>
+<thead>
+<tr>
+<th>原始文本</th>
+<th>ASR 输出可能</th>
+<th>评测策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ref</strong>: <code>I have 2 apples</code></td>
+<td><code>I have two apples</code></td>
+<td><strong>策略 A (Verbalization)</strong>: 将 Ref 中的 <code>2</code> 转写为 <code>two</code>，再对比。<br></td>
+</tr>
+</tbody>
+</table>
+<p><br><strong>策略 B (ITN)</strong>: 将 Hyp 中的 <code>two</code> 转为 <code>2</code>，再对比。 |
+| <strong>Ref</strong>: <code>1990年</code> | <code>一九九零年</code><br></p>
+<p><br><code>一千九百九十年</code> | <strong>困境</strong>：年份读法不唯一。<br></p>
+<p><br><strong>解决</strong>：通常使用策略 B（ITN），将中文数字转回阿拉伯数字进行评测最稳健。 |
+| <strong>Ref</strong>: <code>ok</code> | <code>OK</code><br></p>
+<p><br><code>Okay</code><br></p>
+<p><br><code>okay</code> | <strong>解决</strong>：建立同义词表（Synonym Map）或在规范化阶段统一替换。 |</p>
+<p><strong>工业界最佳实践</strong>：</p>
+<ul>
+<li><strong>声学模型迭代期</strong>：偏向 <strong>Verbalization</strong>（Ref 转文字）。因为我们要测模型“听”得准不准，而不是由 ITN 模块负责的格式对不对。</li>
+<li><strong>产品交付期</strong>：偏向 <strong>ITN</strong>（Hyp 转数字）。因为用户最终看到的是“2025年”，而非“二零二五年”。</li>
+</ul>
+<hr />
+<h2 id="134-speaker-diarization-der-jer">13.4 Speaker Diarization 关键指标：DER 与 JER</h2>
+<h3 id="1341-der-diarization-error-rate">13.4.1 DER (Diarization Error Rate) 深度解析</h3>
+<p>DER 是时间维度的错误率，不关心说话人是谁，只关心“这段时间谁在说话”这个标签对不对。</p>
+<ol>
+<li><strong>Missed Speech (漏检)</strong>：Ref 说有人，Hyp 说没人（被判为静音）。原因：VAD 阈值过高、声音太小。</li>
+<li><strong>False Alarm (FA, 误检)</strong>：Ref 说没人，Hyp 说有人（把噪声当语音）。原因：VAD 阈值过低、呼吸声/键盘声没过滤。</li>
+<li><strong>Speaker Confusion (混淆)</strong>：Ref 是 Spk A，Hyp 是 Spk B。这是 Diarization 模型的核心错误。</li>
+</ol>
+<h3 id="1342-collar">13.4.2 关键参数：Collar（容差/缓冲带）</h3>
+<p>由于人工标注很难精确到毫秒级，且模型平滑处理会导致边界抖动，直接评测会产生大量无意义的 Miss/FA。</p>
+<ul>
+<li><strong>无 Collar (0ms)</strong>：极其严苛，适用于合成数据。</li>
+<li><strong>标准 Collar (250ms)</strong>：NIST / DIHARD 标准。<strong>即：参考边界前后 250ms 内的误差不计入 DER。</strong></li>
+<li><em>Gotcha</em>：在计算 Confusion 时，Collar 区域内的混淆通常也被移除，只看 Collar 之外的稳定区域。</li>
+<li><strong>实现细节</strong>：如果不设置 Collar，你的 DER 可能比论文高 10%~20%。</li>
+</ul>
+<h3 id="1343-optimal-mapping">13.4.3 最佳映射 (Optimal Mapping)</h3>
+<p>模型输出是匿名的 <code>Cluster_0</code>, <code>Cluster_1</code>，参考是 <code>Bob</code>, <code>Alice</code>。如何对应？
+评测脚本会构建一个二分图，边的权重是两个说话人的重叠时长，使用 <strong>匈牙利算法 (Hungarian Algorithm)</strong> 求最大权匹配。</p>
+<h3 id="1344-jer-jaccard-error-rate">13.4.4 JER (Jaccard Error Rate) —— 为“少言”伸张正义</h3>
+<p><strong>DER 的缺陷</strong>：分母是总时长。如果会议里 Leader 说了 50 分钟，Intern 只说了 1 分钟。哪怕模型把 Intern 的 1 分钟全部分错，对总 DER 的影响也微乎其微。</p>
+<p><strong>JER (Jaccard Error Rate)</strong>：</p>
+<ol>
+<li>对每个 Reference Speaker，找到与其重叠最大的 Hypothesis Speaker。</li>
+<li>计算该配对的 Jaccard Index（交并比）。</li>
+<li>计算所有 Reference Speakers 的 Jaccard 错误率  的<strong>平均值</strong>。</li>
+<li><strong>特点</strong>：每个说话人（无论话多话少）权重相等。</li>
+</ol>
+<hr />
+<h2 id="135-mllm-asrdiarization">13.5 MLLM 时代的 ASR/Diarization 评测新视角</h2>
+<p>对于 Whisper、Qwen-Audio、Gemini 等模型，传统的 WER/DER 开始失效。</p>
+<h3 id="1351-semantic-similarity">13.5.1 语义一致性 (Semantic Similarity)</h3>
+<p>MLLM 往往会进行“隐式 ITN”或“润色”。</p>
+<ul>
+<li>Ref: "I, uh... want to um, go."</li>
+<li>Hyp: "I want to go."</li>
+<li><strong>WER</strong>: 很高（因为删除了 uh, um）。</li>
+<li><strong>真实体验</strong>：很好。</li>
+</ul>
+<p><strong>新指标：BERT-Score / Semantic Embedding Distance</strong>
+使用 Text Embedding 模型（如 <code>e5</code> 或 <code>openai-ada-002</code>）提取 Ref 和 Hyp 的向量，计算余弦相似度。如果相似度 &gt; 0.95，即使 WER 高，也视为正确。</p>
+<h3 id="1352-hallucination-rate">13.5.2 幻觉率 (Hallucination Rate)</h3>
+<p>MLLM 在长时间静音或音乐段容易“发疯”，输出重复的“Thank you for watching”或无关文本。</p>
+<p><strong>检测算法</strong>：</p>
+<ol>
+<li><strong>长度比异常</strong>：（且 Ref 不为空）。</li>
+<li><strong>重复检测</strong>：检测 Hyp 中 n-gram 的重复频率（如 "ok ok ok ok"）。</li>
+<li><strong>特定词监控</strong>：监控训练数据中常见的无关词（Subtitle credits, YouTube descriptions）。</li>
+</ol>
+<h3 id="1353-rag-contextual-biasing-eval">13.5.3 RAG 热词召回评测 (Contextual Biasing Eval)</h3>
+<p>当使用 RAG 注入热词（如人名、药名）时，不能只看整体 WER（可能因为整体数据量大而被稀释）。</p>
+<p>需定义 <strong>Keyword-Specific Metrics</strong>：</p>
+<ul>
+<li><strong>Recall (召回率)</strong>：Ref 中的热词，Hyp 中出现了多少？</li>
+<li><strong>Precision (准确率)</strong>：Hyp 中预测出的热词，有多少是对的？</li>
+<li><strong>Bias Effect (偏置效应)</strong>：热词注入是否导了周围词的 WER 升高（例如为了强行匹配“张三”，把“涨散”错认成“张三”）。</li>
+</ul>
+<hr />
+<h2 id="136">13.6 本章小结</h2>
+<ol>
+<li><strong>ASR 核心</strong>：。必须注意分母是 Ref。</li>
+<li><strong>TN 是基石</strong>：评测前必须统一全半角、标点、大小写。中文用 CER，英文用 WER，混语用 MER。</li>
+<li><strong>Diarization 三巨头</strong>：DER（时间错误）、JER（说话人公平）、Collar（容差）。不要在未声明 Collar 的情况下对比 DER。</li>
+<li><strong>MLLM 挑战</strong>：从“字面匹配”转向“语义匹配”与“幻觉控制”。</li>
+</ol>
+<hr />
+<h2 id="137">13.7 练习题</h2>
+<h3 id="50">基础题 (50%)</h3>
+<details>
+<summary><strong>Q1: 基础 WER 手算</strong></summary>
+<p><strong>题目</strong>：
+Ref: "The cat sat on the mat"
+Hyp: "The cat on the mat"</p>
+<ol>
+<li>计算 S, D, I 分别是多少？</li>
+<li>计算 WER。</li>
+</ol>
+<blockquote>
+<p><strong>Hint</strong>: 对齐两者，找出缺少的词。注意 N 是 Ref 的长度。</p>
+</blockquote>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>对齐</strong>：
+Ref: The cat <strong>sat</strong> on the mat
+Hyp: The cat <strong><em>*</em></strong> on the mat
+差异：sat 被删除了。
+S=0, D=1 (sat), I=0.</p>
+</li>
+<li>
+<p><strong>计算</strong>：
+ (Ref 的词数: The, cat, sat, on, the, mat).
+.</p>
+</li>
+</ol>
+</details>
+<details>
+<summary><strong>Q2: 中文 CER vs WER 的陷阱</strong></summary>
+<p><strong>题目</strong>：
+Ref: "南京市长" (Nanjing Mayor)
+Hyp: "南京市长江" (Nanjing City Yangtze River - 典型断句错误导致的识别)</p>
+<p>假设分词器 A 将 Ref 切分为 <code>['南京', '市长']</code>。
+假设分词器 B 将 Hyp 切分为 <code>['南京市', '长江']</code>。</p>
+<ol>
+<li>计算 WER（基于上述分词）。</li>
+<li>计算 CER（基于字符）。</li>
+<li>哪个指标更能反映声学模型的错误？</li>
+</ol>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>WER</strong>:
+Ref: [南京] [市长]
+Hyp: [南京市] [长江]
+对齐后完全不匹配。S=2 (或 S=1, I=1 等，取决于距离计算，但通常是完全错误)。
+WER .</p>
+</li>
+<li>
+<p><strong>CER</strong>:
+Ref: 南 京 市 长
+Hyp: 南 京 市 长 江
+Match: 南, 京, 市, 长。
+Insertion: 江。
+S=0, D=0, I=1, N=4。
+CER = .</p>
+</li>
+<li>
+<p><strong>结论</strong>：CER (25%) 更合理。声学模型其实只多听了一个音（江），前面都对了。WER (100%) 夸大了错误，因它受到了分词歧义的影响。</p>
+</li>
+</ol>
+</details>
+<details>
+<summary><strong>Q3: Diarization 映射与 DER</strong></summary>
+<p><strong>题目</strong>：
+Ref: Spk_A (0-10s), Spk_B (10-20s)
+Hyp: Spk_1 (0-10s), Spk_2 (10-20s)</p>
+<p>系统会如何判定 Speaker 对应关系？DER 是多少？</p>
+<blockquote>
+<p><strong>Hint</strong>: 匈牙利算法寻找最大重叠时长。</p>
+</blockquote>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>重叠矩阵</strong>：
+Spk_1 vs Spk_A: 10s 重叠。
+Spk_2 vs Spk_B: 10s 重叠。</p>
+</li>
+<li>
+<p><strong>映射</strong>：Spk_1  Spk_A, Spk_2  Spk_B。</p>
+</li>
+<li><strong>错误计算</strong>：
+Miss = 0, FA = 0, Conf = 0。
+DER = 0.0%。</li>
+</ol>
+</details>
+<details>
+<summary><strong>Q4: 文本规范化的影响</strong></summary>
+<p><strong>题目</strong>：
+Ref: "It's 10:00 p.m."
+Hyp: "it is ten pm"</p>
+<p>如果不做任何 Normalization，WER 是多少？
+如果做了完善的 Normalization，WER 是多少？</p>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>无 Normalization</strong>:
+Ref tokens: "It's", "10:00", "p.m." (3 tokens)
+Hyp tokens: "it", "is", "ten", "pm" (4 tokens)
+对齐：It's(S)-&gt;it, (I)-&gt;is, 10:00(S)-&gt;ten, p.m.(S)-&gt;pm.
+WER  或更高 (视 tokenizer 而定)。</p>
+</li>
+<li>
+<p><strong>有 Normalization</strong>:
+Ref -&gt; expansion -&gt; "it is ten pm"
+Hyp -&gt; expansion -&gt; "it is ten pm"
+WER = 0%.</p>
+</li>
+</ol>
+</details>
+<h3 id="50_1">挑战题 (50%)</h3>
+<details>
+<summary><strong>Q5: 混语 MER Tokenizer 设计</strong></summary>
+<p><strong>题目</strong>：
+请设计一个 Python 函数逻辑（伪代码），实现 MER 的分词标准：CJK 按字，英文按词。
+输入：<code>"I love 中国"</code>
+期望输出：<code>['I', 'love', '中', '国']</code></p>
+<blockquote>
+<p><strong>Hint</strong>: 遍历字符，检查 Unicode 范围。</p>
+</blockquote>
+<p><strong>答案</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">mixed_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="c1"># 用于累积英文字符</span>
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_cjk</span><span class="p">(</span><span class="n">char</span><span class="p">):</span> <span class="c1"># 判断是否为中日韩字符</span>
+            <span class="k">if</span> <span class="n">buffer</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+                <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span> <span class="c1"># CJK 字符单独成词</span>
+        <span class="k">elif</span> <span class="n">char</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="c1"># 空格</span>
+            <span class="k">if</span> <span class="n">buffer</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+                <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># 英文或其他字符</span>
+            <span class="n">buffer</span> <span class="o">+=</span> <span class="n">char</span>
+    <span class="k">if</span> <span class="n">buffer</span><span class="p">:</span>
+        <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tokens</span>
+</code></pre></div>
+
+</details>
+<details>
+<summary><strong>Q6: RAG 热词评测的准确率陷阱</strong></summary>
+<p><strong>题目</strong>：
+你为一个医疗 ASR 系统加入了一个含有 10,000 个生僻药名的热词表。
+评测结果显示：</p>
+<ul>
+<li>热词 Recall 从 20% 提升到了 80%。</li>
+<li>总体 WER 保持不变 (10%)。</li>
+<li>但医生投诉“很多常用词被识别成了奇怪的药名”。</li>
+</ul>
+<p>请解释为什么 WER 没变但体验变差了？如何量化这个问题？</p>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>原因</strong>：这是典型的 <strong>False Positive (误报)</strong> 问题。
+* 模型确实找回了更多的药名 (Recall 提升)。
+* 但模型变得过于敏感（Biased），把发音相近的常用词（如“要吃饭”）强行识别成了生僻药名（如“药赤凡”）。
+* 由于生僻药名在测试集中出现频率低，而常用词出现频率高，少量的常用词错误被“召回率提升带来的正确字数”抵消了，导致总体 WER 看起来没变。</p>
+</li>
+<li>
+<p><strong>量化方法</strong>：
+* 计算 <strong>热词 Precision</strong>：Hyp 中出现的药名，有多少是真的？
+* 计算 <strong>非热词区域 WER</strong>：只计算 Reference 中不包含药名的句子的 WER。如果这个指标上升，说明热词注入破坏了通用模型的性能。</p>
+</li>
+</ol>
+</details>
+<details>
+<summary><strong>Q7: 幻觉检测算法设计</strong></summary>
+<p><strong>题目</strong>：
+Whisper 模型在一段 30秒 的静音音频中，输出了重复 50 次的 "You"。
+WER 计算为 Insertion Error。
+请设计一个简单的规则过滤器，自动标记这类样本。</p>
+<p><strong>答案</strong>：
+<strong>规则组合</strong>：</p>
+<ol>
+<li><strong>Compression Ratio (压缩比)</strong>：计算 <code>gzip(text) / len(text)</code>。如果文本包含大量重复内容（如 "You You You"），压缩比会非常高（体积变得很小）。</li>
+<li><strong>Distinct N-gram Fraction</strong>：计算 <code>len(set(ngrams)) / len(ngrams)</code>。如果该值极低（例如 &lt; 0.1），说明词汇多样性极低，极大概率是重复幻觉。</li>
+<li><strong>Log-Probability</strong>：检查模型输出的 <code>avg_logprob</code>。幻通常伴随着较低或异常分布的置信度（虽然不总是）。</li>
+</ol>
+</details>
+<details>
+<summary><strong>Q8: Overlap 对 DER 的理论上限</strong></summary>
+<p><strong>题目</strong>：
+一段 10分钟的会议音频，其中有 10% 的时间是两人同时说话（Overlap）。
+你的 Diarization 系统不支持 Overlap 检测（即同一时刻只能输出一个说话人）。
+请问你的 DER 理论下限（最好结果）是多少？（假设 VAD 和 Speaker Clustering 完美）。</p>
+<blockquote>
+<p><strong>Hint</strong>: 在 Overlap 区域，Ref 有 2 个人，Hyp 只有 1 个人。</p>
+</blockquote>
+<p><strong>答案</strong>：</p>
+<ol>
+<li>
+<p><strong>分析</strong>：
+* 总时长 。
+* Overlap 时长 。
+* 在 Overlap 区域，Ref 人数 = 2，Hyp 人数 = 1。
+* 每一时刻，模型都漏掉了一个人 (Missed Detection)。
+* Missed Speech Duration = 。</p>
+</li>
+<li>
+<p><strong>分母计算</strong>：
+* Total Speech in Ref = (单人说话时长) + (双人说话时长  2)
+* 假设剩余 90% 是单人说话（不考虑静音以便简化，或者假设全是语音）：
+* Total Speech = 。</p>
+</li>
+<li>
+<p><strong>DER 计</strong>：
+* 。</p>
+</li>
+<li>
+<p><strong>结论</strong>：即使其他部分完美，不支持 Overlap 的系统在包含 10% 重叠的数据上，DER 最好也只能达到 ~9.1%。</p>
+</li>
+</ol>
+</details>
+<hr />
+<h2 id="138-gotchas">13.8 常见陷阱与错误 (Gotchas)</h2>
+<h3 id="1-sclite-vs-compute-werpy">1. <code>sclite</code> vs <code>compute-wer.py</code></h3>
+<ul>
+<li><strong>现象</strong>：你自己写的 Python 脚本算出的 WER 和 NIST 的 <code>sclite</code> 工具算出的不一样。</li>
+<li><strong>原因</strong>：<code>sclite</code> 支持处理 Reference 中的<strong>可选分支</strong>（如 <code>(ok|okay)</code>）和更复杂的对齐逻辑。</li>
+<li><strong>建议</strong>：学术论文对比务必使用 <code>sclite</code> 或标准的 <code>jiwer</code> 库，不要依赖手写脚本。</li>
+</ul>
+<h3 id="2-reference-crash">2. 空 Reference 导致的 Crash</h3>
+<ul>
+<li><strong>现象</strong>：VAD 切分出的某些片段完全是噪音，Reference 为空字符串。计算 WER 时分母为 0。</li>
+<li><strong>修复</strong>：</li>
+<li><strong>单句级别</strong>：如果  且 ，则 WER 无法定义（或视为无穷大/100%）。</li>
+<li><strong>全局级别</strong>：始终使用 <code>Sum(Errors) / Sum(N_ref)</code> 来计算整个测试集的 WER，而<strong>不是</strong>对每句话的 WER 求平均。这样可以自动处理空 Ref 的问题（只要总 Ref 不为空）。</li>
+</ul>
+<h3 id="3-timestamp-shift">3. 时间戳漂移 (Timestamp Shift)</h3>
+<ul>
+<li><strong>现象</strong>：DER 异常高，但看 RTTM 可视化图，模型切分点形状是对的，只是整体晚了 0.5秒。</li>
+<li><strong>原因</strong>：前端特征提取（STFT）的窗移、流式系统的缓冲延迟未被扣除。</li>
+<li><strong>技巧</strong>：在评测前，尝试对 Hyp 的所有时间戳减去一个固定的 offset（如 200ms），看 DER 是否显著下降，以此校准系统延迟。</li>
+</ul>
+<h3 id="4">4. 繁简转换的“不可逆性”</h3>
+<ul>
+<li><strong>现象</strong>：Ref 是“头发”（简），Hyp 是“頭髮”（繁）。</li>
+<li><strong>陷阱</strong>：简单的 <code>opencc</code> 转换可能把“头发”转回繁体时变成“頭發”（如果词典不全）。</li>
+<li><strong>建议</strong>：<strong>全部转简体</strong>进行评测通常更稳健，因为简体字符集较小，歧义较少。</li>
+</ul>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter12.html" class="nav-link prev">← Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</a><a href="chapter14.html" class="nav-link next">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote →</a></nav>
+        </main>
+    </div>
+</body>
+</html>
