@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>Chapter 19: 附录 A：TN / ITN 速查与工程实战手册</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 1: 任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 2: 工程与实验基线：环境、框架、分布式与可复现</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 3: 数据与标注：采集、清洗、切分、对齐与许可</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 4: 文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 5: 音频预处理与切分：VAD、重叠、对齐与波形级增广</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 6: 特征与前端：从 MFCC 到可学习前端，再到 SSL 表征</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 7: RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 8：Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 9: Transformer 自监督过渡：Conformer、Transducer 与 SSL 微调</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 10: Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 11: 神经 Diarization 与端到端联合：EEND、TS-VAD、SA-ASR</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 12: 多语种与混语训练 (Multilingual & Code-Switching)</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 13: 评测与误差分析——ASR (WER/CER/MER) 与 Diarization (DER/JER) 的细节陷阱</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 14: 开源工具链与训练配方：Kaldi / ESPnet / NeMo / WeNet / FunASR / Pyannote</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 15: 开源数据集大全：ASR / 多语种 / 会议 / 噪声 / Diarization</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 16: MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter17.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 17: MLLM 新内容：RAG 热词识别、上下文增强与说话人知识注入</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter18.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 18: 生产化落地：流式、延迟、部署、监控、隐私与安全</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter19.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 19: 附录 A：TN / ITN 速查与工程实战手册</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter20.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 20: 附录 B：OpenCC、脚本映射与正则工具箱（深度实战版）</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter21.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Chapter 21: 附录 C - 术语表、常见问答 (FAQ) 与进阶阅读</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">Untitled</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="chapter-19-atn-itn">Chapter 19: 附录 A：TN / ITN 速查与工程实战手册</h1>
+<blockquote>
+<p><strong>本章摘要</strong>：
+文本规范化（TN）与逆文本规范化（ITN）是 ASR 系统中“最后两公里”的基础设施。本章提供了一份详尽的规则速查表，涵盖中文（普通话/粤语）、英文、混合语境以及特殊符号的处理标准。同时，本章讨论了在工程实现中如何通过正则（Regex）与加权有限状态转换器（WFST）来落地这些规则。</p>
+</blockquote>
+<hr />
+<h2 id="190-vs">19.0 核心概念：听觉真值 vs 视觉真值</h2>
+<p>在开始编写规则之前，必须在团队内部统一以下两个概念，否则标注和训练将陷入混乱：</p>
+<ol>
+<li>
+<p><strong>TN (Text Normalization)  听觉真值 (Auditory Truth)</strong>
+* <strong>场景</strong>：ASR 声学模型训练、语言模型（LM）训练。
+* <strong>原则</strong>：<strong>所听即所得</strong>。将所有非表音字符（数字、符号、缩写）转换为其发音对应的文字。
+* <strong>目标</strong>：消除歧义。模型不应去“猜” <code>$10</code> 是读 <code>ten dollars</code> 还是 <code>ten bucks</code>，TN 必须确定一种读法。</p>
+</li>
+<li>
+<p><strong>ITN (Inverse Text Normalization)  视觉真值 (Visual Truth)</strong>
+* <strong>场景</strong>：ASR 最终结果展示、字幕生成、RAG 检索输入。
+* <strong>原则</strong>：<strong>符合书写规范</strong>。将口语化的文字流还原为符合语法、美观、紧凑的书面形式。
+* <strong>目标</strong>：可读性与检索性。</p>
+</li>
+</ol>
+<p>| 维度 | 原始文本 (Raw) | TN (训练输入) | ITN (推理输出) | 备注 |</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>原始文本 (Raw)</th>
+<th>TN (训练输入)</th>
+<th>ITN (推理输出)</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>数字</strong></td>
+<td><code>3D打印</code></td>
+<td><code>三 弟 打 印</code></td>
+<td><code>3D打印</code></td>
+<td>训练时英文通常大写</td>
+</tr>
+<tr>
+<td><strong>日期</strong></td>
+<td><code>2024-01-01</code></td>
+<td><code>二 零 二 四 年 一 月 一 日</code></td>
+<td><code>2024年1月1日</code></td>
+<td>ITN 需统一格式</td>
+</tr>
+<tr>
+<td><strong>符号</strong></td>
+<td><code>50%</code></td>
+<td><code>百 分 之 五 十</code></td>
+<td><code>50%</code></td>
+<td>符号读音顺序往往颠倒</td>
+</tr>
+<tr>
+<td><strong>标点</strong></td>
+<td><code>Hello!</code></td>
+<td><code>hello</code></td>
+<td><code>Hello!</code></td>
+<td>训练通常去标点、转小写</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="191">19.1 中文（普通话）深度规范速查</h2>
+<p>中文处理最大的难点在于<strong>数字的多音字（一/幺，二/两）以及单位与数字的粘连</strong>。</p>
+<h3 id="1911-the-yi-and-er-dilemma">19.1.1 数字读法全集 (The "Yi" and "Er" Dilemma)</h3>
+<p>这是中文 ASR 训练数据的头号杀手。</p>
+<p>| 场景 | 数字 | TN (训练读法) | 规则判据 (Rule of Thumb) |</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>数字</th>
+<th>TN (训练读法)</th>
+<th>规则判据 (Rule of Thumb)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>基数/计数</strong></td>
+<td><code>1</code>, <code>2</code></td>
+<td><code>一</code>, <code>二</code></td>
+<td>默认读法。</td>
+</tr>
+<tr>
+<td><strong>数量 (量词前)</strong></td>
+<td><code>2个</code></td>
+<td><code>两 个</code></td>
+<td>后面紧跟量词（个、只、条、万、亿）。</td>
+</tr>
+<tr>
+<td><strong>位读 (ID/电话)</strong></td>
+<td><code>1</code>, <code>2</code></td>
+<td><code>幺</code>, <code>二</code></td>
+<td>电话号码、身份证、房间号。注意：<code>2</code> 在号码中通常读 <code>二</code>，极少读 <code>两</code>。</td>
+</tr>
+<tr>
+<td><strong>年份</strong></td>
+<td><code>2011</code></td>
+<td><code>二 零 一 一</code></td>
+<td>年份中的 <code>1</code> 通常读 <code>一</code>，不读 <code>幺</code>。</td>
+</tr>
+<tr>
+<td><strong>大数</strong></td>
+<td><code>200</code></td>
+<td><code>两 百</code> / <code>二 百</code></td>
+<td>这是一个<strong>摇摆区</strong>。建议统一规范为 <code>两百</code>，或在数据增广时随机替换。</td>
+</tr>
+<tr>
+<td><strong>序数</strong></td>
+<td><code>第2</code></td>
+<td><code>第 二</code></td>
+<td>前缀为“第”时永远读 <code>二</code>。</td>
+</tr>
+<tr>
+<td><strong>小数/分数</strong></td>
+<td><code>0.2</code>, <code>1/2</code></td>
+<td><code>零 点 二</code>, <code>二 分 之 一</code></td>
+<td>小数和分母读 <code>二</code>。</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>工程实现注记</strong>：
+在编写 TN 脚本时，无法仅靠正则区分 <code>110</code> 是“报警电话”（幺幺零）还是“房间号”（一一零）还是“数量”（一百一十）。</p>
+<ul>
+<li><strong>策略 A</strong>：使用 NLP Tagger 标注实体类型，再应用规则。</li>
+<li><strong>策略 B</strong>：对于模糊情况，保留多种读法生成多条训练数据（Data Augmentation）。</li>
+</ul>
+</blockquote>
+<h3 id="1912">19.1.2 日期与时间的正则化</h3>
+<p>输入格式极度发散，输出（ITN）必须收敛。</p>
+<p>| 类型 | 常见输入格式 | TN (Spoken) | ITN 标准化输出 |</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>常见输入格式</th>
+<th>TN (Spoken)</th>
+<th>ITN 标准化输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>标准日期</strong></td>
+<td><code>2023-05-04</code></td>
+<td><code>二零二三年 五月 四日</code></td>
+<td><code>2023年5月4日</code></td>
+</tr>
+<tr>
+<td><strong>斜杠日期</strong></td>
+<td><code>2023/5/4</code></td>
+<td><code>二零二三年 五月 四日</code></td>
+<td><code>2023年5月4日</code></td>
+</tr>
+<tr>
+<td><strong>点号日期</strong></td>
+<td><code>2023.5.4</code></td>
+<td><code>二零二三年 五月 四日</code></td>
+<td><code>2023年5月4日</code></td>
+</tr>
+<tr>
+<td><strong>口语日期</strong></td>
+<td><code>月四号</code></td>
+<td><code>五月 四号</code></td>
+<td><code>5月4日</code> (将“号”转“日”)</td>
+</tr>
+<tr>
+<td><strong>农历</strong></td>
+<td><code>腊月二十三</code></td>
+<td><code>腊月 二十三</code></td>
+<td><code>腊月二十三</code> (通常不转阿拉伯数字)</td>
+</tr>
+<tr>
+<td><strong>时间段</strong></td>
+<td><code>14:00-15:00</code></td>
+<td><code>十四点 到 十五点</code></td>
+<td><code>14:00-15:00</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="1913-prefix-vs-suffix">19.1.3 货币与计量单位 (Prefix vs Suffix)</h3>
+<p>中文口语习惯将符号（如 ￥, $）放在数字之后读出单位，书写时却在前面。</p>
+<p>| 符号 | 含义 | TN 规则 (Text  Audio) | ITN 规则 (Audio  Text) |</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+<th>TN 规则 (Text  Audio)</th>
+<th>ITN 规则 (Audio  Text)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>￥</strong></td>
+<td>RMB</td>
+<td><code>￥100</code>  <code>一百 元</code> / <code>一百 块</code></td>
+<td><code>一百元</code>  <code>100元</code> (推荐) 或 <code>￥100</code></td>
+</tr>
+<tr>
+<td>**$**</td>
+<td>Dollar</td>
+<td><code>$10``十 美元</code>/<code>十 刀</code></td>
+<td><code>十美元``$10</code>或<code>10美元</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="192-english">19.2 英文（English）深度规范速查</h2>
+<p>英文 TN 的核心在于<strong>非标准词（NSW）的展开</strong>与<strong>大小写（Truecasing）</strong>。</p>
+<h3 id="1921">19.2.1 缩写词的分类处理</h3>
+<p>必须区分 <strong>Acronyms</strong> (连读) 和 <strong>Alphabetisms</strong> (逐字母读)。</p>
+<p>| 类型 | 示例 | TN 策略 | 备注 |</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>示例</th>
+<th>TN 策略</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Alphabetisms</strong></td>
+<td><code>FBI</code>, <code>IBM</code>, <code>USA</code></td>
+<td><code>f b i</code>, <code>i b m</code>, <code>u s a</code></td>
+<td>训练时字母间加空格，防止模型学成单词。</td>
+</tr>
+<tr>
+<td><strong>Acronyms</strong></td>
+<td><code>NASA</code>, <code>JPEG</code>, <code>ASAP</code></td>
+<td><code>nasa</code>, <code>jay peg</code>, <code>a sap</code></td>
+<td>需维护读音词典 (Lexicon)。</td>
+</tr>
+<tr>
+<td><strong>混合型</strong></td>
+<td><code>JPEG2000</code></td>
+<td><code>jay peg two thousand</code></td>
+<td>需切分后分别处理。</td>
+</tr>
+<tr>
+<td><strong>多义缩写</strong></td>
+<td><code>Dr.</code></td>
+<td><code>doctor</code> (Dr. Li) / <code>drive</code> (Mulholland Dr.)</td>
+<td>需基于 N-gram 或语法树的上下文判断。</td>
+</tr>
+<tr>
+<td><strong>多义缩写</strong></td>
+<td><code>St.</code></td>
+<td><code>saint</code> (St. Paul) / <code>street</code> (Wall St.)</td>
+<td>同上。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1922">19.2.2 数字的复杂读法</h3>
+<p>| 类型 | 文本 | TN 变体 (需覆盖多种情况) | ITN 策略 |</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>文本</th>
+<th>TN 变体 (需覆盖多种情况)</th>
+<th>ITN 策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>年份</strong></td>
+<td><code>1995</code></td>
+<td><code>nineteen ninety five</code></td>
+<td><code>19...</code> 优先按两位分组识别。</td>
+</tr>
+<tr>
+<td><strong>年份</strong></td>
+<td><code>2005</code></td>
+<td><code>two thousand five</code> (含 <code>and</code> 可选)</td>
+<td><code>2000-2009</code> 通常读 <code>thousand</code>。</td>
+</tr>
+<tr>
+<td><strong>年份</strong></td>
+<td><code>2024</code></td>
+<td><code>twenty twenty four</code></td>
+<td><code>2010+</code> 回归两位分组读法。</td>
+</tr>
+<tr>
+<td><strong>电话</strong></td>
+<td><code>0</code></td>
+<td><code>oh</code> / <code>zero</code></td>
+<td>必须在词表中同时映射 <code>oh</code> 和 <code>zero</code> 到 <code>0</code>。</td>
+</tr>
+<tr>
+<td><strong>货币</strong></td>
+<td><code>$2.50</code></td>
+<td><code>two fifty</code> / <code>two dollars and fifty cents</code></td>
+<td>ITN 需支持简读还原。</td>
+</tr>
+<tr>
+<td><strong>罗马数字</strong></td>
+<td><code>King Henry VIII</code></td>
+<td><code>king henry the eighth</code></td>
+<td>必须展开，否则模型学不到发音。</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="193-code-switching">19.3 多语种混合 (Code-Switching) 实战指南</h2>
+<p>当一句话中同时出现中文、英文、数字时，<strong>分词符（Tokenization）</strong>的处理决定了系统的上限。</p>
+<h3 id="1931-the-spacing-policy">19.3.1 核心原则：空格策略 (The Spacing Policy)</h3>
+<blockquote>
+<p><strong>Golden Rule</strong>: 在训练数据中，<strong>中英文交界处必须插入空格</strong>。</p>
+</blockquote>
+<ul>
+<li><strong>错误示例</strong>: <code>我爱Python编程</code></li>
+<li>Token 序列可能变成: <code>[我, 爱, P, y, t, h, o, n, 编, 程]</code> (Char-level) 或 <code>[我, 爱, Py, thon, 编, 程]</code> (BPE)。</li>
+<li>
+<p>后果：BPE 切分不稳定，模型难以学习英文单词边界。</p>
+</li>
+<li>
+<p><strong>正确示例</strong>: <code>我 爱 Python 编 程</code></p>
+</li>
+<li>处理流程：
+1. 将中文汉字按字切分（加空格）。
+2. 检测到连续英文字符串，保持为一个单词（或 BPE token），其前后加格。
+3. 检测到数字，根据 TN 规则转为汉字或英文单词。</li>
+</ul>
+<h3 id="1932">19.3.2 常见混合模式速查</h3>
+<p>| 原始文本 | TN 处理 (Training Input) | ITN 处理 (User View) | 难点说明 |</p>
+<table>
+<thead>
+<tr>
+<th>原始文本</th>
+<th>TN 处理 (Training Input)</th>
+<th>ITN 处理 (User View)</th>
+<th>难点说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Office 365</code></td>
+<td><code>office three six five</code></td>
+<td><code>Office 365</code></td>
+<td>产品名中的数字往往一位位读。</td>
+</tr>
+<tr>
+<td><code>Windows 10</code></td>
+<td><code>windows ten</code></td>
+<td><code>Windows 10</code></td>
+<td>版本号读基数。</td>
+</tr>
+<tr>
+<td><code>WiFi信号</code></td>
+<td><code>wai fai 信 号</code></td>
+<td><code>Wi-Fi信号</code></td>
+<td><code>WiFi</code> 常见读音需映射到规范词 <code>Wi-Fi</code>。</td>
+</tr>
+<tr>
+<td><code>App</code></td>
+<td><code>a p p</code> (逐字) / <code>app</code> (单词)</td>
+<td><code>App</code></td>
+<td>两种读法在国内都极常见，需双重支持。</td>
+</tr>
+<tr>
+<td><code>C#</code></td>
+<td><code>c sharp</code></td>
+<td><code>C#</code></td>
+<td>不要写成 <code>C井</code>。</td>
+</tr>
+<tr>
+<td><code>C++</code></td>
+<td><code>c plus plus</code></td>
+<td><code>C++</code></td>
+<td>不要写成 <code>C加加</code>。</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="194-cantonese">19.4 粤语（Cantonese）特有规范</h2>
+<p>粤语涉及<strong>三套书写系统</strong>的纠缠：口语字、书面语（标准中文）、拼音（Jyutping）。</p>
+<p>| 类别 | 例子 | 处理策略 |</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>例子</th>
+<th>处理策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>口语字 (必须保留)</strong></td>
+<td><code>嘅</code> (的), <code>喺</code> (在), <code>咁</code> (这么)</td>
+<td><strong>TN</strong>: 绝不转为普通话汉字。训练字表必须包含这些字符。<br></td>
+</tr>
+</tbody>
+</table>
+<p><br><strong>ITN</strong>: 除非任务是“粤语翻译”，否则保留口语字。 |
+| <strong>英粤夹杂</strong> | <code>我个 file 呢</code> | <strong>TN</strong>: <code>我 个 file 呢</code> (英文保留原词，不转拼音)。<br></p>
+<p><br><strong>发音典</strong>: 需为 <code>file</code> 标注粤语口音的音素 (如 <code>f aai1 ou4</code>) 或直接用英文音素。 |
+| <strong>特色词汇</strong> | <code>士多</code> (Store), <code>波士</code> (Boss) | 作为固定词条处理，不还原为英文。 |
+| <strong>正字法 (Gotcha)</strong> | <code>里度</code> vs <code>呢度</code> (这里) | 粤语正字法不统一。<strong>建议</strong>：训练前选定一套标准（如“粤语审音配词字库”），做<strong>同义词归一化</strong>。 |</p>
+<hr />
+<h2 id="195">19.5 符号与标点：去留的艺术</h2>
+<h3 id="1951-tn">19.5.1 训练阶段 (TN)</h3>
+<ul>
+<li><strong>标点符号</strong>：通常<strong>全部删除</strong>。对于长停顿，可以插入 <code>&lt;sil&gt;</code> 或 <code>&lt;pause&gt;</code> 标记。</li>
+<li><strong>特殊字符</strong>：<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> 必须翻译成文字（加、减、乘、除/斜杠）。</li>
+<li><strong>Emoji</strong>: 🥲 通常删除，除做情感分析辅助任务。</li>
+</ul>
+<h3 id="1952-itn">19.5.2 推理阶段 (ITN 后)</h3>
+<ul>
+<li><strong>标点恢复 (Punctuation Restoration)</strong>：这是一个独立的 NLP 模型（通常是 BERT/Transformer-based）。</li>
+<li><strong>处理顺序</strong>：ASR Output  ITN (转数字/格式)  Punctuation Model (加标点)。</li>
+<li><em>理由</em>：标点模型通常在规范文本上训练，先做 ITN 把 <code>三点半</code> 变成 <code>3:30</code> 有助于标点模型判断句读。</li>
+</ul>
+<hr />
+<h2 id="196-ragbiasing">19.6 专名与热词的冲突处理 (RAG/Biasing)</h2>
+<p>当结合 MLLM/RAG 时，TN/ITN 可能会破坏检索键值（Key）。</p>
+<p>| 冲突场景 | 问题描述 | 解决方案 |</p>
+<table>
+<thead>
+<tr>
+<th>冲突场景</th>
+<th>问题描述</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>检索键不匹配</strong></td>
+<td>知识库 Key 为 <code>iPhone 14</code>，ASR 识别为 <code>爱疯十四</code>。</td>
+<td><strong>热词注入</strong>：在解码阶段给 <code>iPhone</code> 和 <code>14</code> 加偏置。<br></td>
+</tr>
+</tbody>
+</table>
+<p><br><strong>模糊检索</strong>：RAG 检索时使用拼音或 Embedding 相似度，而非精确匹配。 |
+| <strong>多音字实体</strong> | 歌手 <code>那英</code> (Na Ying)，ASR 可能把 <code>那</code> 识别为 <code>na4</code>。 | <strong>强制发音典</strong>：在 Lexicon 中强制定义 <code>那英 n a1 y ing1</code>。 |
+| <strong>术语归一化</strong> | 用户说 <code>k8s</code>，知识库里是 <code>Kubernetes</code>。 | <strong>同义词表 (Synonyms)</strong>：在 ITN 后挂载一个<strong>领域术语映射层</strong>。 |</p>
+<hr />
+<h2 id="197-gotchas">19.7 常见陷阱 (Gotchas) 与调试技巧</h2>
+<ol>
+<li>
+<p><strong>“零”的消失与重现</strong>
+* TN: <code>101</code>  <code>一百零一</code> (有零)。
+* TN: <code>110</code>  <code>一百一十</code> (无零，虽然有人读一百一)。
+* <strong>Gotcha</strong>: 不同的 TTS 引擎生成的合成数据，对“零”的处理可能不一致，需清洗。</p>
+</li>
+<li>
+<p><strong>地址中的数字</strong>
+* “长安街1号” vs “长安街一号”。
+* <strong>建议</strong>: 地址类数字通常 ITN 还原为阿拉伯数字，因为便于导航输入。</p>
+</li>
+<li>
+<p><strong>负号与连接符</strong>
+* <code>-5</code> (负五) vs <code>3-5</code> (三到五)。
+* <strong>正则技巧</strong>: 如果 <code>-</code> 前面有空格或行首，且后面跟数字，大概率是“负”。如果两边都是数字，大概率是“到”或“至”。</p>
+</li>
+<li>
+<p><strong>小数点陷阱</strong>
+* 英文 <code>3.14</code> 读 <code>three point one four</code>。
+* 章节 <code>Chapter 3.14</code> 读 <code>three point one four</code>。
+* <strong>IP地址</strong> <code>192.168.1.1</code> 读 <code>one nine two dot one six eight...</code> (point vs dot)。</p>
+</li>
+</ol>
+<hr />
+<h2 id="198">19.8 练习题</h2>
+<h3 id="50">基础题 (50%)</h3>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter18.html" class="nav-link prev">← Chapter 18: 生产化落地：流式、延迟、部署、监控、隐私与安全</a><a href="chapter20.html" class="nav-link next">Chapter 20: 附录 B：OpenCC、脚本映射与正则工具箱（深度实战版） →</a></nav>
+        </main>
+    </div>
+</body>
+</html>
