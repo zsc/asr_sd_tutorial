@@ -1,0 +1,463 @@
+# ASR 与 Speaker Diarization 训练中文教程（多语种：中英及主要语种｜RNN → Conv+LSTM → MLLM）
+
+> 文件组织：`index.md` + `chapter1.md` + `chapter2.md` + …  
+> 本 `index.md` 给出**完整章节规划**与**每章小节清单**（足够细到可直接按清单逐章写作/实现）。
+
+---
+
+## 阅读路线建议（按目标选一条）
+
+- **ASR 训练主线（从零到可用）**：Chapter 1 → 2 → 3 → 4 → 5 → 6 → 7/8/9 → 12 → 13 → 14 → 18  
+- **Diarization 主线（会议/多说话人）**：Chapter 1 → 2 → 4/5 → 10 → 11 → 13 → 14 → 18  
+- **多语种/混语重点**：Chapter 3 → 4 → 12 → 13（再回看 7/8/9/16/17）  
+- **MLLM 时代（ASR/说话人/上下文增强）**：Chapter 16 → 17 → 13 → 18（必要时补齐 4/12）
+
+---
+
+## 仓库结构（规划）
+
+- `index.md`
+- `chapter1.md` … `chapter21.md`
+- （可选）`assets/`（示例音频、图、表、配置片段）
+- （可选）`recipes/`（训练脚本与配置模板：ESPnet/NeMo/SpeechBrain/WeNet/FunASR/pyannote 等）
+- （可选）`tools/`（TN/ITN、OpenCC、对齐切分、评测脚本、数据检查器）
+
+---
+
+## 章节目录与详细小节清单
+
+### Chapter 1（`chapter1.md`）任务全景：ASR 与 Diarization 的训练对象、边界与通用流水线
+- 1.1 本教程覆盖范围：ASR / Diarization / SA-ASR（Speaker-Attributed ASR）/ AST（语音翻译）
+- 1.2 “训练一个系统”到底包含什么：数据→建模→解码→后处理→评测→回归
+- 1.3 多语种场景定义
+  - 1.3.1 单语、跨语迁移、多语联合、code-switch（混语）
+  - 1.3.2 多脚本（Latin/CJK/阿拉伯/天城文等）与混脚本
+- 1.4 Diarization 任务拆解
+  - 1.4.1 SAD/VAD、Speaker embedding、聚类/分割、重分割/重对齐
+  - 1.4.2 Overlap（重叠语音）与多通道会议的特殊性
+- 1.5 典型产品形态与约束
+  - 1.5.1 离线高精度 vs 流式低延迟
+  - 1.5.2 隐私/合规（PII）与数据闭环
+- 1.6 贯穿全书的“可复现”实骨架（目录约定、命名、日志、指标）
+
+---
+
+### Chapter 2（`chapter2.md`）工程与实验基线：环境、框架、分布式与可复现
+- 2.1 训练/推理硬件与瓶颈：GPU/CPU/IO/显存/吞吐
+- 2.2 深度学习栈与常用组件
+  - 2.2.1 PyTorch/Lightning、FSDP/DeepSpeed、混合精度
+  - 2.2.2 数据加载：WebDataset、tar shard、mmap、缓存策略
+- 2.3 实验可复现与可回放
+  - 2.3.1 配置管理（YAML/JSON/CLI）、随机种子、版本锁定
+  - 2.3.2 训练记录：tensorboard/wandb、本地日志结构
+- 2.4 评测与回归自动化（小规模 sanity → 全量 benchmark）
+- 2.5 训练中常见“隐形坑”：NaN、梯度爆炸、数据卡死、指标虚高
+
+---
+
+### Chapter 3（`chapter3.md`）数据与标注：采集、清洗、切分、对齐与许可
+- 3.1 数据许可与“可用性分级”
+  - 3.1.1 开源/研究许可/商用限制/不可再分发
+  - 3.1.2 版权、肖像/声音权、合规注意点（仅给工程建议，不替代法律意见）
+- 3.2 音频基础规范
+  - 3.2.1 采样率、位深、声道、编码格式（wav/flac/mp3）
+  - 3.2.2 响度、削波、静音、噪声类型分布
+- 3.3 标注粒度选择
+  - 3.3.1 句级/段级/词级/字级时间戳
+  - 3.3.2 diarization：turn-level / frame-level / overlap 标注
+- 3.4 数据切分策略（train/dev/test）
+  - 3.4.1 说话人泄漏、内容泄漏、同节目/同会话泄漏
+  - 3.4.2 多语种分层抽样与长尾覆盖
+- 3.5 强制对齐与切分（强烈建议做）
+  - 3.5.1 GMM/HMM 强制对齐、CTC segmentation、MFA 等思路对比
+  - 3.5.2 失败样本的自动诊断与回收（短音频、错字、口音、噪声）
+- 3.6 数据质量体系
+  - 3.6.1 文本/音频一致性检查、异常检测（时长、字符分布、语言分布）
+  - 3.6.2 人工抽检策略与“可解释的质量报告”
+- 3.7 面向 MLLM 的数据额外字段（为后续章节铺垫）
+  - 3.7.1 指令/上下文/领域标签/说话人画像摘要
+  - 3.7.2 可检索知识（RAG）的切片与索引字段
+
+---
+
+### Chapter 4（`chapter4.md`）文本规范化全家桶：TN / ITN / OpenCC / 混语与混脚本
+> 本章是多语种 ASR 成败的关键：**同样模型，不同规范，WER/CER 可差很多**。
+
+- 4.1 统一的文本表示原则（“训练文本”与“评测文本”必须同一套规范）
+- 4.2 Unicode 与字符层标准化（强烈建议先做）
+  - 4.2.1 NFKC/NFC、全角/半角、兼容区（CJK Compatibility Ideographs）
+  - 4.2.2 易混淆字符（confusables）：O/0、l/1、中文标点变体等
+  - 4.2.3 空白符规范：多空格、不可见字符、换行/制表
+- 4.3 标点与大小写策略
+  - 4.3.1 训练是否保留标点：对下游（字幕/会议纪要）与指标的影响
+  - 4.3.2 英文大小写、缩写（NASA/AI）与分词器的交互
+- 4.4 中文 TN（Text Normalization）细则
+  - 4.4.1 数字：纯数字、序数、小数、百分比、分数、范围（3-5）
+  - 4.4.2 日期时间：2025/12/24、12月24日、24th Dec 等多样式
+  - 4.4.3 货币/单：￥/$、km/kg/℃，以及中文单位“公里/千克”
+  - 4.4.4 电话/身份证/车牌/网址（PII 处理策略：脱敏/保留/替换）
+  - 4.4.5 口语化与语气词：啊/呃/嗯/哈，以及笑声、咳嗽等事件标签
+- 4.5 中文 ITN（Inverse Text Normalization）细则（模型输出→可读文本）
+  - 4.5.1 WFST/语法规则式 ITN：可控、可解释
+  - 4.5.2 神经 ITN：鲁棒但可能“过度改写”
+  - 4.5.3 ITN 评测：整体 WER vs 数字/时间/实体的专项指标
+- 4.6 繁体中文与地区差异：OpenCC 与可控转换
+  - 4.6.1 简繁转换策略：训练端统一 vs 评测端兼容
+  - 4.6.2 专有名词与地区用字（台港）处理：白名单/词典优先
+- 4.7 粤语（Cantonese）文本与读音：Hanzi / Jyutping / 混写
+  - 4.7.1 粤语特有字、口语词、语气助词（嘅/咗/喺/啲…）
+  - 4.7.2 Hanzi vs 拼音（Jyutping）两套路：优缺点与混合方案
+  - 4.7.3 与普通话共享汉字导致的“同形异读”风险
+- 4.8 日语中文汉字混淆：平假名/片假名（かな）问题
+  - 4.8.1 Kanji（漢字）与中文同形词：是否共享 token、如何加语言标签
+  - 4.8.2 かな（ひらがな/カタカナ）与外来词：分词、大小写、长音符
+  - 4.8.3 处理中日混语的“脚本提示”（script-aware prompting / tags）
+- 4.9 其他主要语种的 TN/ITN 要点（按脚本归类）
+  - 4.9.1 韩语（Hangul）：空格、外来词、数字读法
+  - 4.9.2 阿拉伯语：变音符、形态变化、双向文本
+  - 4.9.3 印地语/天城文：合字、标点、数字体系
+  - 4.9.4 泰语/老挝语：无空格分词与子词建模的关系
+- 4.10 多语言混合处理（code-switch）“可落地”的统一方案
+  - 4.10.1 语言标签：句级/词级/子词级
+  - 4.10.2 共享词表 vs 分语种词表（多 tokenizer / 多 head）
+  - 4.10.3 “同形字符”冲突治理：CJK/Latin/数字混杂
+- 4.11 面向 MLLM 的借鉴意义（本章与后续 MLLM 章节的连接点）
+  - 4.11.1 规范化 = 可控性：让 MLLM 输出更可评测、更可工具化
+  - 4.11.2 ITN 作为“工具调用”：把难点从模型迁出到可控模块
+  - 4.11.3 RAG/热词/实体：规范字段是检索与对齐的前提
+
+---
+
+### Chapter 5（`chapter5.md`）音频预处理与切分：VAD/SAD、重叠语音、对齐、增广数据生成
+- 5.1 音频清洗：去静音、去削波、DC offset、带通/降噪（谨慎）
+- 5.2 VAD 与 SAD
+  - 5.2.1 传统能量阈值 vs 神经 VAD
+  - 5.2.2 会议场景：短停顿、呼吸声、键盘声的误检治理
+- 5.3 切分策略对 ASR 的影响
+  - 5.3.1 过短切分：上下文不足；过长切分：对齐困难/显存爆
+  - 5.3.2 标点恢复/断句与切分的关系
+- 5.4 重叠语音（overlap）处理
+  - 5.4.1 丢弃/保留/分离（SS）三路线
+  - 5.4.2 diarization 与 ASR 的耦合：先分离再识别 vs 联合建模
+- 5.5 多通道与阵列音频基础
+  - 5.5.1 通道选择、同步、延迟
+  - 5.5.2 波束形成（作为选读扩展）
+- 5.6 数据增广audio-level）
+  - 5.6.1 speed perturb、音量扰动、混响 RIR
+  - 5.6.2 噪声混合：MUSAN/自采噪声，SNR 采样策略
+  - 5.6.3 说话人混合：用于 diarization/分离/鲁棒性
+- 5.7 面向 MLLM 的借鉴意义
+  - 5.7.1 “长音频切块 + 上下文拼接”是 MLLM 流式/长上下文的前置条件
+  - 5.7.2 让检索与对齐可行：chunk 的稳定边界与时间戳策略
+
+---
+
+### Chapter 6（`chapter6.md`）特征与前端：从 MFCC 到可学习前端，再到 SSL 表征
+- 6.1 经典声学特征：MFCC / filterbank / log-mel
+- 6.2 特征归一化：CMVN、说话人级/语料级统计
+- 6.3 SpecAugment 与时频遮挡
+- 6.4 可学习前端：Conv front-end、SincNet 思路（选读）
+- 6.5 自监督特征（为 Chapter 9/16 铺垫）
+  - 6.5.1 wav2vec2 / HuBERT / WavLM / XLS-R 等家族的“怎么用”
+  - 6.5.2 特征抽取 vs 端到端微调：算力与效果折中
+- 6.6 面向 MLLM 的借鉴意义
+  - 6.6.1 “音频编码器”如何与 LLM 对齐：特征尺度/帧率/时压缩
+  - 6.6.2 多任务监督（ASR+VAD+说话人）提升可控性与泛化
+
+---
+
+### Chapter 7（`chapter7.md`）RNN 时代 ASR：从 LSTM/GRU 到 CTC/Attention（并讨论对 MLLM 的启示）
+- 7.1 RNN 声学模型的基本形态：BiLSTM/GRU、堆叠、投影层
+- 7.2 训练目标
+  - 7.2.1 CTC：对齐自由度、blank、collapse 规则
+  - 7.2.2 Attention/LAS：teacher forcing、曝光偏差、长度偏置
+  - 7.2.3 混合损失：CTC+Attention 的经典配方
+- 7.3 解码与语言模型（LM）
+  - 7.3.1 n-gram LM 与 WFST 解码（概念与工程落地）
+  - 7.3.2 LM fusion：shallow fusion / cold fusion（思想层）
+- 7.4 单语到多语：RNN 时代怎么做（以及为什么会卡住）
+- 7.5 错误分析：RNN 时代常见错因（长句、口音、噪声、OOV）
+- 7.6 对 MLLM 的借鉴意义（重点）
+  - 7.6.1 CTC 的“对齐思维”如何帮助 MLLM 做时间戳/可解释对齐
+  - 7.6.2 WFST/规则化后处理作为 MLLM 的外部工具链
+  - 7.6.3 LM 融合思想 → MLLM 的“检索/提示融合”类比
+
+---
+
+### Chapter 8（`chapter8.md`）Conv + LSTM 时代：CLDNN/CRDNN/TDNN-LSTM 与流式工程（并讨论对 MLLM 的启示）
+- 8.1 为什么要 Conv：局部不变性、降噪、特征压缩
+- 8.2 典型结构
+  - 8.2.1 CLDNN：CNN + LSTM + DNN
+  - 8.2.2 CRDNN：CNN + RNN + DNN（更泛化的视角）
+  - 8.2.3 TDNN-LSTM / CNN-TDNN-LSTM：语音工业界常见路线（思想与训练要点）
+- 8.3 流式（streaming）约束下的建模与训练
+  - 8.3.1 chunking、lookahead、状态缓存
+  - 8.3.2 延迟-准确率权衡与评测方式
+- 8.4 多语种训练的工程技巧：采样、温度、长尾、域适配
+- 8.5 对 MLLM 的借鉴意义（重点）
+  - 8.5.1 “可流式”的先验：MLLM 做实时 ASR 的切块与缓存设计
+  - 8.5.2 结构化偏置（Conv/RNN）→ MLLM 中“音频编码器归纳偏置”的价值
+  - 8.5.3 小模型可控模块：在 MLLM 旁路承担 VAD/时间戳/说话人等工具任务
+
+---
+
+### Chapter 9（`chapter9.md`）Transformer 自监督过渡：Conformer、Transducer、SSL 微调（连接到 MLLM）
+- 9.1 Transformer/Conformer 核心：自注意力、卷积模块、相对位置编码
+- 9.2 训练目标谱系：CTC / AED / RNN-T（Transducer）
+- 9.3 大规模预训练 + 微调：wav2vec2/HuBERT/WavLM/XLS-R 思路落地
+- 9.4 多语种统一模型：共享子词、共享声学表征、语言适配器（adapter/LoRA 思想预埋）
+- 9.5 对 MLLM 的借鉴意义（重点）
+  - 9.5.1 “基础模型范式”如何迁移到 MLLM：规模、数据、对齐
+  - 9.5.2 语音 tokenization / 时序压缩对 LLM 交互的关键点
+  - 9.5.3 用 SSL 学到的说话人/韵律信息：如何服务 diarization 与语义理解
+
+---
+
+### Chapter 10（`chapter10.md`）Speaker Diarization 经典流水线：SAD + Embedding + Clustering + Resegmentation
+- 10.1 任务定义与输出形式：RTTM、说话人段、frame-level 标签
+- 10.2 SAD/VAD：从门控到神经 SAD
+- 10.3 说话人表示
+  - 10.3.1 i-vector → x-vector：训练数据、损、域迁移
+  - 10.3.2 embedding 后处理：长度归一化、PCA/LDA、PLDA（思想层）
+- 10.4 聚类
+  - 10.4.1 AHC（层次聚类）与阈值选择
+  - 10.4.2 Spectral clustering 与亲和矩阵构建
+- 10.5 重分割与平滑：VBx、HMM resegmentation（概念与使用时机）
+- 10.6 与 ASR 的组合方式
+  - 10.6.1 diarization→ASR（分轨识别）
+  - 10.6.2 ASR→diarization（用转写做辅助特征/边界）
+- 10.7 对 MLLM 的借鉴意义
+  - 10.7.1 “先结构化再生成”：把说话人边界当作可控先验提供给 MLLM
+  - 10.7.2 embedding 作为检索键：跨会话同一说话人追踪与个性化
+
+---
+
+### Chapter 11（`chapter11.md`）神经 diarization 与端到端联合：EEND、TS-VAD、SA-ASR
+- 11.1 EEND 家族：把 diarization 当作多标签序列学习
+  - 11.1.1 输出通道数与说话人数量不确定性
+  - 11.1.2 overlap 建模的天然优势与训练难点
+- 11.2 TS-VAD：Target-Speaker VAD 与多说话人建模
+- 11.3 联合任务
+  - 11.3.1 Speaker-Attributed ASR（带说话人标签的转写）
+  - 11.3.2 分离（SS）+ ASR + diarization 的组合训练
+- 11.4 训练数据构造：混合生成、说话人配对采样、难例挖掘
+- 11.5 与 MLLM 连接：把“谁在说什么”变成可提示/可检索的结构化输入
+
+---
+
+### Chapter 12（`chapter12.md`）多语种与混语训练：从数据采样到词表、从 LID 到 MoE/Adapter
+- 12.1 多语种困难分解：声学差异、文字系统差异、标注规范差异
+- 12.2 词表与建模单位选择
+  - 12.2.1 字符/子词/BPE/SentencePiece
+  - 12.2.2 byte-level（字节级）与“跨脚本统一”策略
+  - 12.2.3 音素/拼音/罗马化：何时值得做（尤其对粤语/日语）
+- 12.3 数据采样与平衡
+  - 12.3.1 温度采样、按小时/按句子数、按说话人
+  - 12.3.2 长尾语种与低资源语种的保底策略
+- 12.4 语言识别（LID）与条件化建模
+  - 12.4.1 显式 LID：先判语种再识别 vs 联合
+  - 12.4.2 隐式条件：语言 token / adapter / prompt
+- 12.5 code-switch（混语）专项
+  - 12.5.1 训练集构造：自然混语 vs 合成混语
+  - 12.5.2 评测定义：MER（Mixed Error Rate）、按语种分解的 WER/CER
+- 12.6 面向 MLLM：多语种“对齐”与“可控输出”如何通过数据与规范实现
+
+---
+
+### Chapter 13（`chapter13.md`）评测与误差分析：ASR（WER/CER/MER）与 Diarization（DER/JER）的细节陷阱
+- 13.1 ASR 指标体系
+  - 13.1.1 WER/CER 的选择与可比性
+  - 13.1.2 对齐规则、空格、标点、大小写对指标的影响
+  - 13.1.3 code-switch：MER 与按语种拆分的指标
+- 13.2 TN/ITN 的评测方法
+  - 13.2.1 “先 TN 再算 WER” vs “原样算 WER”两套口径
+  - 13.2.2 数字/日期/单位的专项集（challenge set）构建
+- 13.3 Diarization 指标体系
+  - 13.3.1 DER：collar、overlap、SAD 错误如何计入
+  - 13.3.2 JER 与其他补充指标（段边界、说话人混淆）
+- 13.4 误差分析与可视化
+  - 13.4.1 典型错因分类（口音/噪声/专名/切分/规范化）
+  - 13.4.2 分桶统计：按时长、SNR、语速、语种、领域、说话人数
+- 13.5 回归测试与“指标防回退”机制（训练迭代必备）
+
+---
+
+### Chapter 14（`chapter14.md`）开源工具链与训练配方：Kaldi / ESPnet / NeMo / SpeechBrain / WeNet / FunASR / pyannote
+- 14.1 选型建议：科研复现 vs 工业训练 vs 快速落地
+- 14.2 ASR 框架实战要点（每家都讲“共同结构”，不只贴命令）
+  - 14.2.1 数据准备格式：manifest/jsonl、Kaldi style、tar shard
+  - 14.2.2 训练配置：batch、累积梯度、SpecAug、tokenizer
+  - 14.2.3 解码：beam、LM fusion、热词/上下文 biasing
+- 14.3 Diarization 工具链
+  - 14.3.1 pyannote.audio：pipeline 组合与自定义训练
+  - 14.3.2 NeMo diarization：SAD + embedding + clustering 全流程
+  - 14.3.3 SpeechBrain diarization：配方与复现注意点
+- 14.4 通用工程模块（建议沉淀为 `tools/`）
+  - 14.4.1 TN/ITN、OpenCC、脚本映射
+  - 14.4.2 对齐切分、评测脚本、报生成
+- 14.5 面向 MLLM：如何把传统工具链包装成“可调用工具”（tool API）
+
+---
+
+### Chapter 15（`chapter15.md`）开源数据集大全：ASR / 多语种 / 会议 / 噪声 / diarization / speaker
+> 本章按“用途+语种+许可可用性”组织，并给出推荐的组合方式。
+
+- 15.1 如何读数据集列表：开源程度、标注质量、领域、口音、噪声、说话人数量
+- 15.2 中文（普通话/简繁）ASR 常用数据集
+  - 15.2.1 AISHELL 系列（1/2/3/4）
+  - 15.2.2 WenetSpeech
+  - 15.2.3 THCHS-30
+  - 15.2.4 ST-CMDS
+  - 15.2.5 Primewords
+  - 15.2.6 Aidatatang_200zh
+  - 15.2.7 MagicData（开放子集/研究许可子集按可得性注明）
+  - 15.2.8 Common Voice：中文（含简体/繁体覆盖视版本）
+- 15.3 粤语/港澳地区相关（以可公开获取为主）
+  - 15.3.1 Common Voice：Cantonese（yue）/ Chinese（zh-HK/zh-TW 等视版本）
+  - 15.3.2 其他公开可得粤语语音（按可用性汇总：研究项目/竞赛集/开源子集）
+- 15.4 英文 ASR 常用数据集
+  - 15.4.1 LibriSpeech / LibriTTS
+  - 15.4.2 TED-LIUM
+  - 15.4.3 GigaSpeech
+  - 15.4.4 Common Voice（English 多口音）
+  - 15.4.5 AMI（会议语音，也用于 diarization）
+- 15.5 日语 ASR 常用数据集（公开/研究可用为主）
+  - 15.5.1 Common Voice（Japanese）
+  - 15.5.2 JSUT
+  - 15.5.3 JVS（Japanese Versatile Speech）
+  - 15.5.4 ReazonSpeech（若可公开获取则列入主清单，否则列“可申请”）
+- 15.6 韩语 ASR 常用数据集
+  - 15.6.1 KsponSpeech（注意许可）
+  - 15.6.2 Common Voice（Korean）
+- 15.7 欧洲多语种与高资源语种
+  - 15.7.1 MLS（Multilingual LibriSpeech）
+  - 15.7.2 VoxPopuli
+  - 15.7.3 Common Voice（多语种长尾覆盖）
+- 15.8 超多语种与评测集
+  - 15.8.1 FLEURS（多语种统一评测/训练资源）
+  - 15.8.2 mTEDx / TEDx 多语种语料（按可得性）
+- 15.9 低资源/长尾语种（按许可与可得性分类列举）
+  - 15.9.1 IARPA BABEL（若不可开源则标注为“受限/申制”）
+  - 15.9.2 其他公开项目：电台/议会/宗教朗读等语料（按来源归类）
+- 15.10 噪声/混响/多说话人混合：训练鲁棒性的“配料”
+  - 15.10.1 MUSAN（噪声/音乐/杂音）
+  - 15.10.2 DNS Challenge 数据/噪声集（按可得性）
+  - 15.10.3 WHAM! / WHAMR! / LibriMix / SMS-WSJ（混合语音/分离/重叠）
+- 15.11 会议/多说话人 ASR 与 diarization 数据集
+  - 15.11.1 AMI Meeting Corpus
+  - 15.11.2 ICSI Meeting Corpus（若许可受限则标注）
+  - 15.11.3 CHiME-6（噪声会议/家庭聚会类）
+  - 15.11.4 AISHELL-4（多通道会议/说话人）
+  - 15.11.5 AliMeeting（若可公开获取则列入）
+  - 15.11.6 LibriCSS（重叠与连续语音场景）
+- 15.12 Diarization 专项评测集
+  - 15.12.1 DIHARD 系列
+  - 15.12.2 CALLHOME（若许可受限则标注）
+  - 15.12.3 VoxConverse（对话场景）
+- 15.13 Speaker recognition / embedding 训练数据（用于 x-vector 等）
+  - 15.13.1 VoxCeleb 1/2
+  - 15.13.2 SITW（Speakers in the Wild）
+  - 15.13.3 CN-Celeb / CNCeleb（若可得性受限则标注）
+- 15.14 数据集组合“推荐菜单”
+  - 15.14.1 低成本起步（开源优先）
+  - 15.14.2 会议 diarization 优先组合
+  - 15.14.3 多语种长尾覆盖组合
+  - 15.14.4 领域自适应（医疗/法律/客服/直播）如何补数据
+
+---
+
+### Chapter 16（`chapter16.md`）MLLM 时代：从 Speech Foundation Model 到“可对话的语音智能体”
+- 16.1 什么是 MLLM 时代的 ASR/diarization：能力边界与常见误解
+- 16.2 典型架构谱系
+  - 16.2.1 音频编码器 + LLM（投影/适配层对齐）
+  - 16.2.2 离散语音 token（codec/tokenizer）+ LLM
+  - 16.2.3 端到端 Speech-to-Text 指令微调（instruction tuning）
+- 16.3 训练范式
+  - 16.3.1 预训练（多任务）：ASR/AST/QA/音频事件/说话人
+  - 16.3.2 对齐与指令：数据模板、拒答/纠错、格式约束
+  - 16.3.3 参数高效微调：adapter/LoRA/QLoRA（概念与取舍）
+- 16.4 MLLM ASR 的典型问题
+  - 16.4.1 幻觉（hallucination）与“补词”
+  - 16.4.2 时间戳、断句与格式一致性
+  - 16.4.3 多语种与混语：语言漂移、脚本漂移
+- 16.5 传统时代对 MLLM 的继承关系（回扣 Chapter 4/7/8/9）
+  - 16.5.1 规范化/ITN 作为外部工具
+  - 16.5.2 解码约束/热词偏置的“可控输出”思想
+  - 16.5.3 diarization 结构化先验（边界/说话人）作为输入条件
+
+---
+
+### Chapter 17（`chapter17.md`）MLLM 新内容：RAG 热词识别、上下文增强、可控解码与说话人知识注入
+- 17.1 RAG 做“热词识别/专名召回”的核心思路
+  - 17.1.1 语音→初稿→检索→二次解码/重写 的两段式
+  - 17.1.2 热词来源：通讯录/组织架构/业务词库/近期事件/会议信息
+  - 17.1.3 检索粒度：词/短语/实体；时间范围与权限控制
+- 17.2 热词注入与偏置方法大全（从传统到 MLLM）
+  - 17.2.1 传统：WFST/lexicon biasing、shallow fusion（思想回扣）
+  - 17.2.2 神经：contextual biasing、prefix-constrained decoding
+  - 17.2.3 MLLM：prompt 约束、结构化候选表、tool 调用改写
+- 17.3 领域术语与缩写的鲁棒处理
+  - 17.3.1 医疗/法律/金融：数字/单位/缩写密集场景
+  - 17.3.2 “术语表 + TN/ITN + RAG”三件套
+- 17.4 说话人相关的 RAG（Speaker-aware RAG）
+  - 17.4.1 说话人画像：姓名/职位/口音/常用词（隐私与权限）
+  - 17.4.2 跨会话同一说话人追踪：embedding 作为检索键
+- 17.5 会议场景增强：议程/参会人/历史纪要作为上下文
+- 17.6 MLLM 与 diarization 的融合新玩法（可落地优先）
+  - 17.6.1 diarization 结果→结构化提示→生成“带说话人转写”
+  - 17.6.2 不确定性表达：置信度、候选、多版本输出
+- 17.7 防幻觉与格式约束
+  - 17.7.1 “只允许改写某些字段”的局部编辑策略
+  - 17.7.2 断言式校验：正则/词典/ITN 规则做自动验收
+- 17.8 与 Chapter 13 的连接：如何评测 RAG/热词是否真的提升（不引入副作用）
+
+---
+
+### Chapter 18（`chapter18.md`）生产化落地：流式、延迟、部署、监控、隐私与安全
+- 18.1 离线 vs 流式系统设计
+  - 18.1.1 chunk 策略、端点检测、增量修订（partial hypothesis）
+  - 18.1.2 diarization 流式：在线聚类、说话人漂移与回溯修正
+- 18.2 性能优化
+  - 18.2.1 量化/蒸馏/剪枝、KV cache、batching
+  - 18.2.2 ONNX/TensorRT（可选）、CPU 推理策略
+- 18.3 可靠性与可观测性
+  - 18.3.1 指标：延迟、失败率、WER proxy、覆盖率、热词命中率
+  - 18.3.2 日志与抽样回放：可复盘的线上问题定位
+- 18.4 数据闭环与持续学习
+  - 18.4.1 主动学习：挑哪些样本回标
+  - 18.4.2 伪标签与自训练：收益与风险（漂移/污染）
+- 18.5 隐私与安全工程实践
+  - 18.5.1 PII 脱敏（音频与文本）
+  - 18.5.2 权限控制：RAG 知识源隔离、审计
+  - 18.5.3 风险输出治理：避免“编造事实”的业务伤害
+
+---
+
+### Chapter 19（`chapter19.md`）附录 A：TN/ITN 速查表中英为主，覆盖多语种关键点）
+- 19.1 中文数字/日期/时间/单位规则模板
+- 19.2 英文缩写/大小写/连字符规则模板
+- 19.3 code-switch 常见模式与推荐规范
+- 19.4 专名与热词：白名单/黑名单与冲突处理
+
+---
+
+### Chapter 20（`chapter20.md`）附录 B：OpenCC、脚本映射与正则工具箱（含示例）
+- 20.1 OpenCC 常用配置与注意点（简繁、台港用字差异）
+- 20.2 中日同形汉字与 かな 处理示例（脚本提示、token 策略）
+- 20.3 粤语 Hanzi/Jyutping 混写治理示例
+- 20.4 Unicode 清洗正则：不可见字符、全半角、标点统一
+- 20.5 评测前统一化脚本（gold/hyp 一致处理）
+
+---
+
+### Chapter 21（`chapter21.md`）附录 C：术语表、常见问答（FAQ）与进一步阅读
+- 21.1 术语表：CTC/AED/RNNT/DER/JER/SAD/VAD/SSL/RAG…
+- 21.2 FAQ：指标不降、训练不收敛、混语崩坏、热词越加越差等
+- 21.3 进一步阅读：论文脉络（RNN→Conv+LSTM→Transformer/SSL→MLLM）与工程文档路线
+
+---
+
+## 章节之间的“强依赖关系”（写作/实现提醒）
+- **Chapter 4（文本规范化）** 是多语种/混语/MLLM 可控输出的地基：建议优先完成。
+- **Chapter 13（评测）** 要尽早落地：否则训练迭代会在“看起来更好”但不可比的口径里迷失。
+- **Chapter 17（MLLM+RAG 热词）** 必须建立在 Chapter 4/13 的规范与评测之上，否则热词“命中”可能只是指标幻觉。
