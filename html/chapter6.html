@@ -524,7 +524,7 @@ Log-Mel 特征通常包含负值（如 -10 到 5 之间）。如果 Padding 为 
 * <strong>异同</strong>：Dropout 是随机丢弃神经元（特征通道），SpecAugment 是丢弃结构化的时频块（Block）。SpecAugment 强迫模型利用“剩余的上下文”或“剩余的谐波”来重建信息，更像是一种针对时频数据的结构化 Dropout。</li>
 <li><strong>流式 CMVN</strong>：
 * 使用 EMA：。
-* <strong>静音门控</strong>：在 VAD 判断为静音（或能量低于阈值）时，停止更新  和 ，防止背景噪声主导了统计量，导致后续语音帧归一化后幅值过大（炸音）。</li>
+* <strong>静音门控</strong>：在 VAD 判断为静音（或能量低于阈值）时，停止更新均值 μ 和方差 σ，防止背景噪声主导了统计量，导致后续语音帧归一化后幅值过大（炸音）。</li>
 <li><strong>短音素消失</strong>：
 * 30ms 的声音只有 3 帧（10ms/帧）。Stride=4 的卷积可能会将其与前后背景音混合，甚至在 MaxPooling 中丢失位置精度。
 * 这对 MLLM 的影响是可能产生“吞字”现象，或者时间戳预测不准。解决方案通常是使用重叠切片或更精细的 Tokenizer。</li>

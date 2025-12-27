@@ -221,7 +221,7 @@
 <p>在 ASR（自动语音识别）和 Speaker Diarization（说话人日志）的训练与评测中，文本处理的“卫生状况”往往决定了模型的上限。数据清洗不仅仅是“去掉空格”那么简单，它涉及字符编码的底层原理、语言学的正字法（Orthography）规范以及多语种混合时的冲突治理。</p>
 <p><strong>为什么这一章至关重要？</strong></p>
 <ol>
-<li><strong>Tokenizer 爆炸</strong>：未规范化的文本会导致 BPE/SentencePiece 词表充斥着意义相同的冗余 Token（如全角/半角数字、异体字，稀释了每个 Token 的训练数据量。</li>
+<li><strong>Tokenizer 爆炸</strong>：未规范化的文本会导致 BPE/SentencePiece 词表充斥着意义相同的冗余 Token（如全角/半角数字、异体字），稀释了每个 Token 的训练数据量。</li>
 <li><strong>评测虚高/虚低</strong>：如果 Ground Truth 是“OK”，而模型输出“okay”，在未做归一化的情况下会被判错，导致 WER 无法反映真实听感效果。</li>
 <li><strong>MLLM 的幻觉诱因</strong>：对于多模态大模型，不一致的文本输入（如混用的繁简字）会作为一种“隐性提示”，诱导模型输出错误的方言词汇或产生幻觉。</li>
 </ol>
@@ -244,31 +244,31 @@
 <tbody>
 <tr>
 <td><code>s2t.json</code></td>
-<td>简  繁 (字符)</td>
+<td>简 → 繁 (字符)</td>
 <td><strong>极低</strong></td>
 <td>仅做 Codepoint 映射。会将“后天”转为“后天”（正确应为“後天”），“皇后”转为“皇後”（正确应为“皇后”）。<strong>严禁在 ASR 语料处理中使用</strong>，否则会制造大量语义噪音。</td>
 </tr>
 <tr>
 <td><code>s2twp.json</code></td>
-<td>简  台湾正体 (含短语)</td>
+<td>简 → 台湾正体 (含短语)</td>
 <td><strong>推荐 (台湾场景)</strong></td>
-<td>包含“短语映射”。如：<code>计算机</code>  <code>電腦</code>，<code>出租车</code>  <code>計程車</code>。这对于训练面向台湾口音的 ASR 至关重要，因为 LM 需要学习当地的用词概率。</td>
+<td>包含“短语映射”。如：<code>计算机</code> → <code>電腦</code>，<code>出租车</code> → <code>計程車</code>。这对于训练面向台湾口音的 ASR 至关重要，因为 LM 需要学习当地的用词概率。</td>
 </tr>
 <tr>
 <td><code>t2s.json</code></td>
-<td>繁  简 (字符)</td>
+<td>繁 → 简 (字符)</td>
 <td><strong>中 (通用场景)</strong></td>
 <td>适合将繁体语料并入大规模简体训练集。注意：它会将“電腦”转回“电脑”，这在做混合语种训练时是可接受的。</td>
 </tr>
 <tr>
 <td><code>tw2sp.json</code></td>
-<td>台湾正体  简 (含短语)</td>
+<td>台湾正体 → 简 (含短语)</td>
 <td><strong>高 (回译增强)</strong></td>
 <td>当你需要利用台湾语料（如 PTT 语音、台剧）来增强陆普通话模型时，此配置能将台湾特有词汇“翻译”为大陆习惯，减少 OOV。</td>
 </tr>
 <tr>
 <td><code>hk2s.json</code></td>
-<td>香港繁体  简</td>
+<td>香港繁体 → 简</td>
 <td><strong>中 (粤语辅助)</strong></td>
 <td>处理香港特有汉字（如“裏”转“里”，“羣”转“群”）。</td>
 </tr>
@@ -332,8 +332,8 @@
 <p>日语书写系统极其复杂，以下清理步骤是<strong>必须</strong>的：</p>
 <ol>
 <li>
-<p><strong>半角片假名 (Half-width Katakana)  全角</strong>：
-* <code>ｱ</code> (U+FF71)  <code>ア</code> (U+30A2)。
+<p><strong>半角片假名 (Half-width Katakana) → 全角</strong>：
+* <code>ｱ</code> (U+FF71) → <code>ア</code> (U+30A2)。
 * 原因：半角假名在 Tokenizer 中往往被切分得很碎，且在视觉上不美观。
 * <strong>正则范围</strong>：<code>[\uFF61-\uFF9F]</code> (半角假名区域)。</p>
 </li>
@@ -372,11 +372,11 @@
 粤语有很多同音异字写法，需强制统一：</p>
 </li>
 <li>
-<p><code>既</code> / <code>嘅</code>  区分用法：<code>嘅</code> (Possessive/Particle, 的), <code>既</code> (Since/Already)。若无法区分，ASR 训练通常统一为 <code>嘅</code>（因为更高频）。</p>
+<p><code>既</code> / <code>嘅</code> → 区分用法：<code>嘅</code> (Possessive/Particle, 的), <code>既</code> (Since/Already)。若无法区分，ASR 训练通常统一为 <code>嘅</code>（因为更高频）。</p>
 </li>
-<li><code>D</code> / <code>啲</code>  统一为 <code>啲</code>。</li>
+<li><code>D</code> / <code>啲</code> → 统一为 <code>啲</code>。</li>
 <li>
-<p><code>地</code> / <code>哋</code>  复数人称统一为 <code>哋</code>（如：我哋）。</p>
+<p><code>地</code> / <code>哋</code> → 复数人称统一为 <code>哋</code>（如：我哋）。</p>
 </li>
 <li>
 <p><strong>Step 3: 语气助词 (Final Particles) 处理</strong></p>
@@ -390,8 +390,8 @@
 <h3 id="2051-unicode-normalization-forms-nfc-vs-nfd">20.5.1 Unicode Normalization Forms (NFC vs NFD)</h3>
 <p>这是最容易被忽视的 Bug 头。</p>
 <ul>
-<li><strong>NFC (Normalization Form Composition)</strong>: 字符尽可能合并。<code>e</code> + <code>´</code>  <code>é</code>。 <strong>(ASR 标准)</strong></li>
-<li><strong>NFD (Normalization Form Decomposition)</strong>: 字符尽可能拆分。<code>é</code>  <code>e</code> + <code>´</code>。</li>
+<li><strong>NFC (Normalization Form Composition)</strong>: 字符尽可能合并。<code>e</code> + <code>´</code> → <code>é</code>。 <strong>(ASR 标准)</strong></li>
+<li><strong>NFD (Normalization Form Decomposition)</strong>: 字符尽可能拆分。<code>é</code> → <code>e</code> + <code>´</code>。</li>
 <li><strong>NFKC</strong>: 在 NFC 基础上，处理兼容字符（全角变半角，<code>④</code> 变 <code>4</code>）。</li>
 </ul>
 <blockquote>
@@ -432,7 +432,7 @@
 <tr>
 <td><strong>重复标点</strong></td>
 <td>匹配 <code>([。，！？])\1+</code> 替换为 <code>\1</code></td>
-<td><code>真的吗？？！！！</code>  <code>真的吗？！</code> (或标准化为单个)。</td>
+<td><code>真的吗？？！！！</code> → <code>真的吗？！</code> (或标准化为单个)。</td>
 </tr>
 <tr>
 <td><strong>连续空格压缩</strong></td>
@@ -481,7 +481,7 @@
 </ol>
 <h3 id="2062-mandarin-protocol">20.6.2 中文评测标准 (Mandarin Protocol)</h3>
 <ol>
-<li><strong>空格移除</strong>: 中文无空格分词。<code>我 爱 你</code>  <code>我爱你</code>。</li>
+<li><strong>空格移除</strong>: 中文无空格分词。<code>我 爱 你</code> → <code>我爱你</code>。</li>
 <li><strong>全角转半角</strong>: 尤其针对英文和数字部分。</li>
 <li><strong>繁转简</strong>: 绝大多数 Benchmarks（如 AISHELL）是简体的。如果模型输出繁体，必须转简后再评测。</li>
 <li><strong>多音字容错 (高级)</strong>:
@@ -500,8 +500,8 @@
 <li>Ref: <code>我 love 你</code></li>
 <li>Hyp: <code>我love你</code></li>
 <li><strong>预处理</strong>：在汉字与英文之间插入空格。</li>
-<li>Ref  <code>我 love 你</code> (Tokens: 我, love, 你)</li>
-<li>Hyp  <code>我 love 你</code> (Tokens: 我, love, 你)</li>
+<li>Ref → <code>我 love 你</code> (Tokens: 我, love, 你)</li>
+<li>Hyp → <code>我 love 你</code> (Tokens: 我, love, 你)</li>
 <li>这样计算 MER (Mixed Error Rate) 才准确。</li>
 </ul>
 <hr />

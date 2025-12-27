@@ -248,8 +248,8 @@
 </tr>
 <tr>
 <td><strong>输入输出</strong></td>
-<td>Audio  Text</td>
-<td>Audio + Text Prompt  Text Response</td>
+<td>Audio → Text</td>
+<td>Audio + Text Prompt → Text Response</td>
 </tr>
 <tr>
 <td><strong>建模范式</strong></td>
@@ -279,7 +279,7 @@
 <h3 id="1621-a-cascade">16.2.1 流派 A：级联模式 (Cascade) —— “稳健的松耦合”</h3>
 <p>最直观的方案：<strong>ASR Model + LLM</strong>。</p>
 <ul>
-<li><strong>工作流</strong>：Audio  Text Transcript  LLM  Result。</li>
+<li><strong>工作流</strong>：Audio → Text Transcript → LLM → Result。</li>
 <li><strong>优点</strong>：</li>
 <li><strong>模块化</strong>：ASR 和 LLM 可以独立升级（例如 ASR 换成最新的 Paraformer，LLM 换成 Llama 3）。</li>
 <li><strong>极低成本</strong>：不需要训练，全是推理。</li>

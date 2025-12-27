@@ -270,11 +270,11 @@
 <h3 id="22-tdnnkaldi">2.2 TDNN：Kaldi 的“卷积”魔法</h3>
 <p>TDNN (Time-Delay Neural Network) 是 Waibel 在 1989 年提出的概念，但在 2015 年后被 Kaldi 框架重新发扬光大（尤其是 TDNN-F 变体）。</p>
 <h4 id="tdnn-rnn">为什么 TDNN 不是 RNN？</h4>
-<p>RNN 是递归的（时刻  依赖 ），这导致无法并行计算。TDNN 本质上是<strong>一维空洞卷积（1D Dilated Convolution）</strong>。它通过“在此刻看过去和未来几个特定时刻”来聚合信息。</p>
+<p>RNN 是递归的（时刻 t 依赖 t-1），这导致无法并行计算。TDNN 本质上是<strong>一维空洞卷积（1D Dilated Convolution）</strong>。它通过“在此刻看过去和未来几个特定时刻”来聚合信息。</p>
 <ul>
 <li><strong>Context Splicing（上下文拼接）</strong>：</li>
-<li>Layer 1: 看 ，感受野为 5。</li>
-<li>Layer 2: 看 Layer 1 的 （通常会有空洞，如 ）。</li>
+<li>Layer 1: 看 t-2, t-1, t, t+1, t+2，感受野为 5。</li>
+<li>Layer 2: 看 Layer 1 的 t-2, t, t+2（通常会有空洞，如 stride=2）。</li>
 <li>
 <p>随着层数加深，顶层神经元感受野（Receptive Field）可以覆盖数百毫秒甚至整句。</p>
 </li>
@@ -290,25 +290,27 @@
 <h4 id="1-chunking">1. Chunking (分块)</h4>
 <p>将无限长的音频流切分为固定长度的片段。</p>
 <ul>
-<li><strong>Chunk Size ()</strong>：模型一次前向传播处理的时长（如 640ms, 1000ms）。</li>
-<li><strong>Inference Step</strong>：每收到  毫秒数据，进行一次推理。</li>
+<li><strong>Chunk Size (C)</strong>：模型一次前向传播处理的时长（如 640ms, 1000ms）。</li>
+<li><strong>Inference Step (S)</strong>：每收到 S 毫秒数据，进行一次推理。</li>
 </ul>
 <h4 id="2-state-carrying">2. State Carrying (状态传递)</h4>
-<p>对于 LSTM，时刻  的输出依赖于 。在流式中，当 Chunk  处理完后，必须将其最后一帧的 Hidden State () 和 Cell State () <strong>缓存</strong>下来，作为 Chunk  的初始状态。</p>
+<p>对于 LSTM，时刻 t 的输出依赖于 h_{t-1}, c_{t-1}。在流式中，当 Chunk n 处理完后，必须将其最后一帧的 Hidden State (h) 和 Cell State (c) <strong>缓存</strong>下来，作为 Chunk n+1 的初始状态。</p>
 <blockquote>
-<p><strong>注意</strong>：CNN/TDNN 也是有状态的！因为卷积需要左侧上下文。处理 Chunk  时，需要缓存 Chunk  的最后几帧原始特征，拼接到 Chunk  的头部，以消除卷积边缘效应。</p>
+<p><strong>注意</strong>：CNN/TDNN 也是有状态的！因为卷积需要左侧上下文。处理 Chunk n 时，需要缓存 Chunk n 的最后几帧原始特征，拼接到 Chunk n+1 的头部，以消除卷积边缘效应。</p>
 </blockquote>
 <h3 id="32-the-math-of-latency">3.2 延迟计算 (The Math of Latency)</h3>
 <p>延迟是产品经理最关心的指标。我们需要区分<strong>模型延迟</strong>和<strong>端到端延迟</strong>。</p>
 <p>假设：</p>
 <ul>
-<li>：分块大小（如 40ms 一块，或者更大）。</li>
-<li>：右侧前瞻（Right Context / Lookahead），即为了识别当前帧，必须等待的未来帧时长。</li>
-<li>：模型推理计算耗时。</li>
+<li>C：分块大小（如 40ms 一块，或者更大）。</li>
+<li>L：右侧前瞻（Right Context / Lookahead），即为了识别当前帧，必须等待的未来帧时长。</li>
+<li>P：模型推理计算耗时。</li>
 </ul>
-<p><strong>Algorithmic Latency（算法延迟）</strong>：</p>
-<p><em>解释：为了输出 Chunk 的第一个字，我至少要等这块读完（），并且等未来的信息都到齐（）。</em></p>
-<p><strong>User Perceived Latency（用户感知延迟）</strong>：</p>
+<p><strong>Algorithmic Latency（算法延迟）</strong>：
+C + L + P</p>
+<p><em>解释：为了输出 Chunk 的第一个字，我至少要等这块读完（C），并且等未来的信息都到齐（L）。</em></p>
+<p><strong>User Perceived Latency（用户感知延迟）</strong>：
+C/2 + L + P</p>
 <p><em>解释：平均而言，用户说话结束时，系统可能刚好处于一个 Chunk 的中间，所以平均等待半个 Chunk。</em></p>
 <h3 id="33-lookahead">3.3 Lookahead 的权衡</h3>
 <ul>
@@ -323,19 +325,20 @@
 <p>在 Conv+LSTM 时代，模型容量开始增大，单模型支持多语种（Multilingual ASR）成为主流。</p>
 <h3 id="41-temperature-sampling">4.1 数据不平衡与温度采样 (Temperature Sampling)</h3>
 <p><strong>问题</strong>：假设英语有 10,000 小时，马来语只有 100 小时。如果均匀随机采样（Uniform Sampling），模型每看 100 个 Batch，只有 1 个 Batch 是马来语。结果：马来语学不会，或者收敛极慢。</p>
-<p><strong>解决方案</strong>：使用温度参数  平滑数据分布。
-设  为第  种语言的数据量，采样概率  为：</p>
+<p><strong>解决方案</strong>：使用温度参数 T 平滑数据分布。
+设 n_i 为第 i 种语言的数据量，采样概率 p_i 为：
+p_i = n_i^{1/T} / ∑_j n_j^{1/T}</p>
 <ul>
 <li><strong>T = 1.0</strong>：原始分布（大语种霸权）。</li>
 <li><strong>T &gt; 1.0</strong>：提升小语种概率（Over-sampling）。</li>
-<li><strong>T </strong>：所有语种概率相等（Uniform）。</li>
+<li><strong>T → ∞</strong>：所有语种概率相等（Uniform）。</li>
 </ul>
 <p><strong>Rule of Thumb (经验值)</strong>：</p>
 <ul>
 <li><strong>T = 2.0 ~ 5.0</strong> 是业界常用范围。</li>
 <li>例如 <strong>T=5.0</strong>：</li>
-<li>10,000 小时  权重 </li>
-<li>100 小时  权重 </li>
+<li>10,000 小时 → 权重约 10000^{1/5} ≈ 6.3</li>
+<li>100 小时 → 权重约 100^{1/5} ≈ 2.5</li>
 <li>比例从 100:1 变成了 2.5:1，极大地保护了小语种。</li>
 </ul>
 <h3 id="42">4.2 词表策略</h3>
@@ -397,12 +400,12 @@
 <p><strong>Hint:</strong> 算法延迟是理论上的刚性等待；用户感知延迟要考虑随机说话结束点。</p>
 <p><strong>Answer:</strong></p>
 <ol>
-<li><strong>算法延迟 (Algorithmic)</strong> = 。</li>
+<li><strong>算法延迟 (Algorithmic)</strong> = 40ms + 120ms = 160ms。</li>
 <li><strong>用户感知延迟</strong>：
-* 平均等待半个 Chunk: 
-* 等待 Lookahead: 
-* 处理延迟 (假设刚处理完前一块):  (注: 这是一个简化估算，实际处理时间随 chunk 大小变化)
-* 总计约  左右。（注：若 RTF=0.5，说明处理很快，主要瓶颈在 Lookahead）。</li>
+* 平均等待半个 Chunk: 20ms
+* 等待 Lookahead: 120ms
+* 处理延迟 (假设刚处理完前一块): 20ms (注: 这是一个简化估算，实际处理时间随 chunk 大小变化)
+* 总计约 160ms 左右。（注：若 RTF=0.5，说明处理很快，主要瓶颈在 Lookahead）。</li>
 </ol>
 </details>
 <details>
@@ -410,7 +413,7 @@
 <p><strong>Hint:</strong> 想象你在读一本书，翻页时如果忘记了上一页最后一句话，还能读懂吗？</p>
 <p><strong>Answer:</strong></p>
 <ul>
-<li><strong>定义</strong>：将上一个 Chunk 结束时 LSTM 的内部状态（）保存下来，作为下一个 Chunk 的初始状态。</li>
+<li><strong>定义</strong>：将上一个 Chunk 结束时 LSTM 的内部状态（h, c）保存下来，作为下一个 Chunk 的初始状态。</li>
 <li><strong>后果</strong>：如果不做，每一个 Chunk 对于 LSTM 来说都是一个新的开始（状态清零），模型会丢失之前的上下文信息。会导致<strong>句子中间断裂</strong>，识别结果语无伦次，准确率大幅下降。</li>
 </ul>
 </details>
@@ -443,7 +446,7 @@
 <ul>
 <li><strong>陷阱 1：双向 LSTM (BiLSTM)</strong>。离线训练常用 BiLSTM，它利用了全句的未来信息。流式推理只能用 Uni-directional LSTM。如果你训练用 BiLSTM，推理时强行切开，反向层是无法工作的。</li>
 <li><strong>陷阱 2：Global Padding vs. Causal Padding</strong>。</li>
-<li><strong>训练时</strong>：CNN 默认 Padding 往往是在两边补零（Same Padding），这意味着  时刻的卷积利用了  的信息。</li>
+<li><strong>训练时</strong>：CNN 默认 Padding 往往是在两边补零（Same Padding），这意味着 t 时刻的卷积利用了 t+1 的信息。</li>
 <li><strong>推理时</strong>：如果没有未来的数据，边缘无法进行同样的卷积运算。</li>
 <li><strong>解决</strong>：训练时必须强制使用 <strong>Causal Convolution</strong>（只 Padding 左边）或通过 Mask 遮挡未来信息，确保训练和推理的感受野一致。</li>
 </ul>

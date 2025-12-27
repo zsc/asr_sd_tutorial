@@ -220,14 +220,14 @@
 <h2 id="1">1. 开篇段落</h2>
 <p>欢迎来到本教程的最后一站。</p>
 <p>在前面的二十章中，我们从数据的采集清洗，一路讲到了 MLLM 的微调与 RAG 落地。然而，ASR 与 Speaker Diarization 是典型的<strong>“长尾问题”</strong>领域——跑通一个 Baseline 很容易，但解决那 5% 的恶性错误（Bad Case）却需要深厚的经验积累。</p>
-<p>本章被设计为你的<strong>案头手册（Cheat Sheet）和救火指南</strong>。这里不仅有跨越三个时代的术语定义，防止你在阅读不年份的论文时产生歧义；更有一份汇集了工业界无数次“踩坑”经验的 FAQ，覆盖了从“Loss 不收敛”到“MLLM 幻觉”的各类疑难杂症；最后，我们按技术演进脉络梳理了一份必读文献清单，助你从“知其然”进阶到“知其所以然”。</p>
+<p>本章被设计为你的<strong>案头手册（Cheat Sheet）和救火指南</strong>。这里不仅有跨越三个时代的术语定义，防止你在阅读不同年份的论文时产生歧义；更有一份汇集了工业界无数次“踩坑”经验的 FAQ，覆盖了从“Loss 不收敛”到“MLLM 幻觉”的各类疑难杂症；最后，我们按技术演进脉络梳理了一份必读文献清单，助你从“知其然”进阶到“知其所以然”。</p>
 <hr />
 <h2 id="2-the-ultimate-glossary">2. 核心术语表 (The Ultimate Glossary)</h2>
 <p>为了方便查阅，我们将术语按<strong>模型架构</strong>、<strong>数据与特征</strong>、<strong>评测指标</strong>、<strong>训练策略</strong>四大类进行编排。</p>
 <h3 id="21-architecture-mechanism">2.1 模型架构与机制 (Architecture &amp; Mechanism)</h3>
 <ul>
 <li><strong>CTC (Connectionist Temporal Classification)</strong></li>
-<li><strong>定义</strong>：一种不需要帧级别强对齐（Frame-level Alignment）的损失函数。它引入了  (blank) 符号，允许神经网络的输出序列长度短于输入特征序列长度。</li>
+<li><strong>定义</strong>：一种不需要帧级别强对齐（Frame-level Alignment）的损失函数。它引入了 blank 符号（_），允许神经网络的输出序列长度短于输入特征序列长度。</li>
 <li><strong>关键特性</strong>：输出之间相互独立（Conditional Independence），因此无法根据前文修正后文（除非外挂 LM）。</li>
 <li>
 <p><strong>典型应用</strong>：DeepSpeech 2, Wav2Vec 2.0 的预训练目标。</p>
@@ -257,7 +257,7 @@
 <li>
 <p><strong>EEND (End-to-End Neural Diarization)</strong></p>
 </li>
-<li><strong>定义</strong>：彻底抛弃“聚类”思想的 Diarization 方法。它将任务建模为<strong>多标签分类（Multi-label Classification）</strong>问题，输出维度为 （时间  说话人数）。</li>
+<li><strong>定义</strong>：彻底抛弃“聚类”思想的 Diarization 方法。它将任务建模为<strong>多标签分类（Multi-label Classification）</strong>问题，输出维度为 T×S（时间 × 说话人数）。</li>
 <li>
 <p><strong>优势</strong>：天然支持 Overlap（重叠语音）检测。</p>
 </li>
@@ -266,7 +266,7 @@
 </li>
 <li><strong>定义</strong>：指能够理解非文本模态（如音频）的大语言模型。</li>
 <li><strong>Speech-LLM 两大流派</strong>：
-1. <strong>Cascaded (级联)</strong>：ASR 模型转文字  LLM 处理。
+1. <strong>Cascaded (级联)</strong>：ASR 模型转文字 → LLM 处理。
 2. <strong>End-to-End (端到端)</strong>：音频通过 Encoder 变为 Continuous Embeddings 或 Discrete Tokens，直接作为 LLM 的 Prompt 输入。</li>
 </ul>
 <h3 id="22-data-features">2.2 数据与特征 (Data &amp; Features)</h3>
@@ -298,7 +298,7 @@
 <h3 id="23-evaluation-metrics">2.3 评测指标 (Evaluation Metrics)</h3>
 <ul>
 <li><strong>WER / CER (Word/Character Error Rate)</strong></li>
-<li><strong>公式</strong>：（替换+删除+插入 / 参考总数）。</li>
+<li><strong>公式</strong>：（替换 + 删除 + 插入） / 参考总数。</li>
 <li>
 <p><strong>陷阱</strong>：中文算 CER，英文算 WER。如果中英混杂，必须定义清晰的 <strong>MER (Mixed Error Rate)</strong> 计算规则（中文按字，英文按词）。</p>
 </li>

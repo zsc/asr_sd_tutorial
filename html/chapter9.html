@@ -229,13 +229,13 @@
 </blockquote>
 <hr />
 <h2 id="91">9.1 开篇：从“特征工程”到“规模法则”</h2>
-<p>在 Chapter 7 和 8 中，我们到工程师们像搭积木一样精心设计网络：用 CNN 抓取频域纹理，用 LSTM 记忆时间依赖。然而，随着 Transformer 在 NLP 领域的爆发，语音领域迎来了一次<strong>“暴力美学”与“归纳偏置”的完美融合</strong>。</p>
+<p>在 Chapter 7 和 8 中，我们看到工程师们像搭积木一样精心设计网络：用 CNN 抓取频域纹理，用 LSTM 记忆时间依赖。然而，随着 Transformer 在 NLP 领域的爆发，语音领域迎来了一次<strong>“暴力美学”与“归纳偏置”的完美融合</strong>。</p>
 <p>这一时期的核心矛盾是：<strong>标注数据太贵，而无标数据太便宜</strong>。
 传统的监督训练（Supervised Learning）往往在 1万小时数据后遭遇边际效应递减。而本章介绍的 <strong>自监督学习（SSL）</strong> 范式，证明了模型容量（Model Size）与无标数据量（Unlabeled Data）可以遵循 Scaling Law（规模法则），将 WER（词错误率）推向新低。</p>
 <p>现在的 ASR 开发范式已经变成：<strong>“下载一个巨大的预训练底座（Foundation Model） -&gt; 用少量业务数据微调（Fine-tuning）”</strong>。</p>
 <hr />
 <h2 id="92-conformer">9.2 架构进化：Conformer 详解</h2>
-<p>Transformer 的全全局注意力（Global Self-Attention）虽然强大，但在语音处理上存在两个先天缺陷：</p>
+<p>Transformer 的全局注意力（Global Self-Attention）虽然强大，但在语音处理上存在两个先天缺陷：</p>
 <ol>
 <li><strong>局部性缺失</strong>语音具有极强的局部相关性（如共振峰的连续性），CNN 提取这种特征极其高效，而 Transformer 需要大量数据才能学会关注“邻居”。</li>
 <li><strong>位置编码失效</strong>：传统的绝对位置编码（Absolute PE）难以处理推理时变长的音频（训练 10秒，推理 1小时）。</li>
@@ -262,7 +262,7 @@ Output
 <ol>
 <li><strong>Macaron Net 风格</strong>：FFN 被拆成两个半步（Half-step）分别放在 Attention 的前后。实验证明这种结构比标准 Transformer（Attention -&gt; FFN）收敛更稳。</li>
 <li><strong>相对位置编码 (Relative Positional Encoding)</strong>：这是 Conformer 能处理长音频的关键。模型不再记住“第 5 帧”的绝对特征，而是学习“当前帧与前 5 帧”的相对关系。这使得模型具有了<strong>平移不变性</strong>。</li>
-<li><strong>Swish 激活函数</strong>：全线替代 ReLU。。它在负区间有非零梯度，更平滑，对深层网络训练更友好。</li>
+<li><strong>Swish 激活函数</strong>：全线替代 ReLU。它在负区间有非零梯度，更平滑，对深层网络训练更友好。</li>
 </ol>
 <h3 id="922-conv-module">9.2.2 卷积模块 (Conv Module) 内部</h3>
 <p>这是 Conformer 的灵魂。它不是普通的 Conv2D，而是为了效率极致优化的 <strong>Depthwise Separable Conv</strong>：</p>
@@ -288,21 +288,21 @@ Output
 <h4 id="_2">结构图解</h4>
 <p>Transducer 由三部分组成：</p>
 <ul>
-<li><strong>Encoder (AM)</strong>: 处理声学特征 （如 Conformer）。</li>
-<li><strong>Predictor (LM)</strong>: 处理历史预测的 token 。注意，现代 Transducer 往往使用无状态（Stateless）的 Predictor（仅 Embedding 或 简单 Conv），因为 Conformer Encoder 已经够强了，弱化 LM 可以减少为了“通顺”而忽略“发音”的错误。</li>
+<li><strong>Encoder (AM)</strong>: 处理声学特征 X（如 Conformer）。</li>
+<li><strong>Predictor (LM)</strong>: 处理历史预测的 token y_{&lt;u}。注意，现代 Transducer 往往使用无状态（Stateless）的 Predictor（仅 Embedding 或 简单 Conv），因为 Conformer Encoder 已经够强了，弱化 LM 可以减少为了“通顺”而忽略“发音”的错误。</li>
 <li><strong>Joint Network</strong>: 融合 AM 和 LM 的特征。</li>
 </ul>
 <h4 id="lattice-walk">格点游走 (Lattice Walk)</h4>
 <p>训练过程可以看作在一个网格上找路径：</p>
 <ul>
-<li><strong>横轴</strong>：时间  (Acoustic frames)</li>
-<li><strong>纵轴</strong>：文本长度  (Label tokens)</li>
+<li><strong>横轴</strong>：时间 t (Acoustic frames)</li>
+<li><strong>纵轴</strong>：文本长度 u (Label tokens)</li>
 <li><strong>动作</strong>：</li>
-<li>(Blank): 保持当前文本不变，时间步 （向右走）。</li>
-<li>(Token): 输出一个字，文本长度 ，时间步不变（向上走）。</li>
+<li><strong>Blank</strong>: 保持当前文本不变，时间步 t→t+1（向右走）。</li>
+<li><strong>Token</strong>: 输出一个字，文本长度 u→u+1，时间步不变（向上走）。</li>
 </ul>
 <blockquote>
-<p><strong>Gotcha</strong>: Transducer 的显存消耗巨大，因为要计算  的 4D 张量（ 是词表大小）。<strong>Pruned Transducer (如 k2/icefall)</strong> 通过只计算对角线附近的路径，将内存消耗降到了原来的 1/10 甚至更低。</p>
+<p><strong>Gotcha</strong>: Transducer 的显存消耗巨大，因为要计算 T×U×V 的 4D 张量（V 是词表大小）。<strong>Pruned Transducer (如 k2/icefall)</strong> 通过只计算对角线附近的路径，将内存消耗降到了原来的 1/10 甚至更低。</p>
 </blockquote>
 <hr />
 <h2 id="94-ssl-wav2vec-20-wavlm">9.4 SSL 自监督学习：从 wav2vec 2.0 到 WavLM</h2>
@@ -362,7 +362,7 @@ Output
 <p>这是一个至重要的概念。
 HuBERT 的输出并不是连续的向量，而是对音频帧进行了<strong>离散化 (Discretization)</strong>。</p>
 <ul>
-<li>它把连续的语音空间切分成了  个簇（例如 500 或 2000 个）。</li>
+<li>它把连续的语音空间切分成了 K 个簇（例如 500 或 2000 个）。</li>
 <li>每一帧音频都有一个对应的 Cluster ID。</li>
 <li><strong>这实际上就是把语音变成了“外星语言”的文字</strong>。MLLM 正是利用这些 Discrete Tokens 来“读”语音的。</li>
 </ul>
@@ -377,7 +377,7 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了<strong>�
 <h3 id="952-parameter-efficient-fine-tuning-peft">9.5.2 Parameter-Efficient Fine-Tuning (PEFT)</h3>
 <p>借鉴 NLP语音界也开始大规模使用 Adapter：</p>
 <ul>
-<li><strong>LoRA (Low-Rank Adaptation)</strong>: 在 Attention 的  矩阵旁路增加低秩矩阵。</li>
+<li><strong>LoRA (Low-Rank Adaptation)</strong>: 在 Attention 的 W_q/W_v 等矩阵旁路增加低秩矩阵。</li>
 <li><strong>Adapter Layer</strong>: 在 FFN 之后插入小型的 MLP 层。</li>
 <li><strong>价值</strong>: 你可以为一个底座模型挂载 100 个不同的“语言包”，每个包只有 10MB，而不是存 100 个大模型。</li>
 </ul>
@@ -414,7 +414,7 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了<strong>�
 <h2 id="98">9.8 练习题</h2>
 <h3 id="_3">基础题</h3>
 <ol>
-<li><strong>计算题</strong>：假设音频帧移为 10ms，下采样率为 4（即模型每输出一步对应原始 4 帧）。一段 10 秒的音频进入 Conformer Encoder 后，输出的序列长度  是多少？</li>
+<li><strong>计算题</strong>：假设音频帧移为 10ms，下采样率为 4（即模型每输出一步对应原始 4 帧）。一段 10 秒的音频进入 Conformer Encoder 后，输出的序列长度 U 是多少？</li>
 <li><strong>概念辨析</strong>：在使用 wav2vec 2.0 进行微调时，为什么通常要加一个 <code>LayerDrop</code> 机制？</li>
 <li><strong>Transducer</strong>：在 RNN-T 的 Joint Network 中，通常操作是单纯的相加（Add）还是拼接（Concat）？为什么现代实现倾向于使用简单的加法？</li>
 </ol>
@@ -429,8 +429,8 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了<strong>�
 <ol>
 <li>
 <p><strong>序列长度计算</strong>
-* 总帧数 =  帧。
-* 下采样率为 4，输出  帧。</p>
+* 总帧数 = 1000 帧。
+* 下采样率为 4，输出 250 帧。</p>
 </li>
 <li>
 <p><strong>LayerDrop</strong>

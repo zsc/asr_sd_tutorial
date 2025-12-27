@@ -239,7 +239,7 @@
 <blockquote>
 <p><strong>Rule of Thumb (延迟预算)</strong>：</p>
 <ul>
-<li><strong>人机交互（语音助手）</strong>：首字延迟（Time to First Token, TTFT）应 。超过 1s 用户会觉得系统卡顿。</li>
+<li><strong>人机交互（语音助手）</strong>：首字延迟（Time to First Token, TTFT）应 ≤ 300ms。超过 1s 用户会觉得系统卡顿。</li>
 <li><strong>人对人（会议实时转写）</strong>：容忍度稍高，1s-2s 的延迟通常可以接受，以换取更高的准确率。</li>
 </ul>
 </blockquote>
@@ -250,7 +250,7 @@
 为了保证连贯性，处理当前 Chunk 时需要历史状态（Hidden State）。</li>
 </ol>
 <ul>
-<li><em>RNN/LSTM</em>：传递 hidden state 。</li>
+<li><em>RNN/LSTM</em>：传递 hidden state (h, c)。</li>
 <li><em>Transformer/Conformer</em>：传递 KV Cache（Key/Value 缓存）。</li>
 </ul>
 <ol start="2">
@@ -272,7 +272,7 @@
 新来的 Embedding 应该归入哪一个已有的 Cluster？</p>
 </li>
 <li>
-<p>如果距离现有 Cluster 中心都很远  创建新说话人。</p>
+<p>如果距离现有 Cluster 中心都很远，则创建新说话人。</p>
 </li>
 <li>
 <p><strong>难点</strong>：如果一个人前 5 秒声音很低沉，后 5 秒很激昂，在线算法容易误判为两个人。</p>
@@ -289,11 +289,12 @@
 <p>优化的目标通常是在满足延迟约束（Latency Constraint）的前提下，最大化吞吐量（Throughput）。</p>
 <h4 id="1821">18.2.1 关键指标详解</h4>
 <ol>
-<li><strong>RTF (Real Time Factor)</strong>:</li>
+<li><strong>RTF (Real Time Factor)</strong>:
+RTF = 处理耗时 / 音频时长</li>
 </ol>
 <ul>
-<li>意味着处理 10 秒音频只需 1 秒。这是离线系统必须达到的标准。</li>
-<li><strong>注意</strong>：对于流式系统，RTF 必须  且要有余量（如 ），否则处理速度追不上说话速度，延迟会无限累积。</li>
+<li>RTF = 0.1 意味着处理 10 秒音频只需 1 秒。这是离线系统必须达到的标准。</li>
+<li><strong>注意</strong>：对于流式系统，RTF 必须 &lt; 1 且要有余量（如 0.7），否则处理速度追不上说话速度，延迟会无限累积。</li>
 </ul>
 <ol start="2">
 <li><strong>Latency (延迟)</strong>:
@@ -320,12 +321,12 @@
 <tr>
 <td><strong>L1: 模型级</strong></td>
 <td><strong>Quantization (量化)</strong></td>
-<td><strong>必做</strong>。FP32  FP16（无损加速）。FP16  INT8（需校准，通常 2-4倍加速，显存减半）。</td>
+<td><strong>必做</strong>。FP32 → FP16（无损加速）。FP16 → INT8（需校准，通常 2-4倍加速，显存减半）。</td>
 </tr>
 <tr>
 <td></td>
 <td><strong>KV Cache</strong></td>
-<td><strong>MLLM 必做</strong>。在 Transformer 解码阶段，缓存每一层的  和  矩阵。如果不做，生成第  个 Token 的复杂度是 ，做了是 。</td>
+<td><strong>MLLM 必做</strong>。在 Transformer 解码阶段，缓存每一层的 K 和 V 矩阵。如果不做，生成第 t 个 Token 的复杂度是 O(t^2)，做了是 O(t)。</td>
 </tr>
 <tr>
 <td><strong>L2: 算子级</strong></td>
@@ -353,7 +354,7 @@
 </li>
 <li>
 <p><strong>置信度（Confidence Score）</strong>：
-* 虽然置信度  准确率，但<strong>置信度均值</strong>的剧烈波动通常预示着问题。
+* 虽然置信度不等于准确率，但<strong>置信度均值</strong>的剧烈波动通常预示着问题。
 * <em>告警策略</em>：如果某台服务器的平均置信度比其他机器低 20%，这台机器的 GPU 可能有故障，或者麦克风输入异常。</p>
 </li>
 </ol>
@@ -395,7 +396,7 @@
 <li><strong>正则基线</strong>：手机号、身份证、邮箱。</li>
 <li><strong>NER 模型</strong>：识别人名、地名、机构名。</li>
 <li><strong>替换策略</strong>：</li>
-<li><em>Masking</em>: <code>13812345678</code>  <code>[PHONE]</code>（适合训练，保持语义结构）。</li>
+<li><em>Masking</em>: <code>13812345678</code> → <code>[PHONE]</code>（适合训练，保持语义结构）。</li>
 <li><em>Redaction</em>: <code>138****5678</code>（合展示）。</li>
 </ul>
 <h4 id="1852-rag">18.5.2 RAG (检索增强生成) 的安全陷阱</h4>
@@ -432,20 +433,23 @@
 </ol>
 <p><strong>提示</strong>：</p>
 <ol>
-<li>。</li>
-<li>吞吐量 =  秒？或者更直观地理解：处理 1 小时音频需要  小时。</li>
+<li>RTF = 计算耗时 / 音频时长。</li>
+<li>吞吐量 = 物理时间能处理的音频时长；或者更直观地理解：处理 1 小时音频需要多少物理时间。</li>
 </ol>
 <p><strong>答案</strong>：</p>
 <ol>
-<li><strong>RTF 计算</strong>：</li>
+<li><strong>RTF 计算</strong>：
+RTF = 6 / 600 = 0.01</li>
 </ol>
 <p>这表示处理速度是实时的 100 倍。</p>
 <ol start="2">
 <li><strong>吞吐量计算</strong>：
-在单流串行的情况下，1 小时（3600s）的物理时间可以处理：</li>
+在单流串行的情况下，1 小时（3600s）的物理时间可以处理：
+3600 / 0.01 = 360000s 音频</li>
 </ol>
-<p>更简单的算法：机器每秒能处理  秒的音频。
-那么 1 小时（3600秒）机器能处理的音频时长为：</p>
+<p>更简单的算法：机器每秒能处理 1 / 0.01 = 100 秒的音频。
+那么 1 小时（3600秒）机器能处理的音频时长为：
+3600 * 100 = 360000 秒</p>
 <p>所以理论最大吞吐量为 <strong>100 音频小时/每物理小时</strong>。</p>
 </details>
 <details>
@@ -493,29 +497,29 @@ GPU 处理一个 Batch 的时间取决于 Batch 中<strong>最长</strong>的那
 <details>
 <summary><strong>习题 4：MLLM 的 KV Cache 显存估算（数学题）</strong></summary>
 <p><strong>题目</strong>：
-假设一个 MLLM 模型，隐藏层维度 ，层数 。
+假设一个 MLLM 模型，隐藏层维度 4096，层数 32。
 模型使用 FP16 存储（每个参数 2 Bytes）。
-现在有一个并发请求，输入音频对应的 Prompt 长度加上生成的输出长度总共为  tokens。
+现在有一个并发请求，输入音频对应的 Prompt 长度加上生成的输出长度总共为 1000 tokens。
 请计算：仅这 <strong>1 个并发请求</strong>，其 KV Cache 需要占用多少显存？（不考虑中间激活值，只算 KV 缓存）。</p>
 <p><strong>提示</strong>：
-KV Cache 每一层存储  和  两个矩阵。每个矩阵的大小是 。</p>
+KV Cache 每一层存储 K 和 V 两个矩阵。每个矩阵的大小是 d（即隐藏维度）。</p>
 <p><strong>答案</strong>：</p>
 <ol>
 <li>
 <p>每层每个 Token 需要存储 K 和 V 向量：
-大小 =  (K和V)  Bytes (FP16) =  Bytes。</p>
+大小 = 2 * d * 2 Bytes (FP16) = 4d Bytes。</p>
 </li>
 <li>
-<p>代入 ：
-每层每个 Token 占用  Bytes =  KB。</p>
+<p>代入 d=4096：
+每层每个 Token 占用 4 * 4096 Bytes = 16384 Bytes = 16 KB。</p>
 </li>
 <li>
-<p>总共有  层：
-每个 Token 总占用  KB =  KB。</p>
+<p>总共有 32 层：
+每个 Token 总占用 32 * 16 KB = 512 KB。</p>
 </li>
 <li>
-<p>序列长度 ：
-总 KV Cache =  KB =  KB  <strong>500 MB</strong>。</p>
+<p>序列长度 1000：
+总 KV Cache = 1000 * 512 KB = 512000 KB ≈ 500 MB。</p>
 </li>
 </ol>
 <p><strong>结论</strong>：仅仅 1 个请求就要占 0.5 GB 显存。如果是 32 并发，光 KV Cache 就要占 16 GB。这解释了为什么长上下文 MLLM 推理极其消耗显存。</p>

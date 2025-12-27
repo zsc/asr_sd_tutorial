@@ -226,13 +226,13 @@
 <p>在开始编写规则之前，必须在团队内部统一以下两个概念，否则标注和训练将陷入混乱：</p>
 <ol>
 <li>
-<p><strong>TN (Text Normalization)  听觉真值 (Auditory Truth)</strong>
+<p><strong>TN (Text Normalization) — 听觉真值 (Auditory Truth)</strong>
 * <strong>场景</strong>：ASR 声学模型训练、语言模型（LM）训练。
 * <strong>原则</strong>：<strong>所听即所得</strong>。将所有非表音字符（数字、符号、缩写）转换为其发音对应的文字。
 * <strong>目标</strong>：消除歧义。模型不应去“猜” <code>$10</code> 是读 <code>ten dollars</code> 还是 <code>ten bucks</code>，TN 必须确定一种读法。</p>
 </li>
 <li>
-<p><strong>ITN (Inverse Text Normalization)  视觉真值 (Visual Truth)</strong>
+<p><strong>ITN (Inverse Text Normalization) — 视觉真值 (Visual Truth)</strong>
 * <strong>场景</strong>：ASR 最终结果展示、字幕生成、RAG 检索输入。
 * <strong>原则</strong>：<strong>符合书写规范</strong>。将口语化的文字流还原为符合语法、美观、紧凑的书面形式。
 * <strong>目标</strong>：可读性与检索性。</p>
@@ -253,7 +253,7 @@
 <tr>
 <td><strong>数字</strong></td>
 <td><code>3D打印</code></td>
-<td><code>三 弟 打 印</code></td>
+<td><code>三 D 打 印</code></td>
 <td><code>3D打印</code></td>
 <td>训练时英文通常大写</td>
 </tr>
@@ -401,28 +401,28 @@
 </table>
 <h3 id="1913-prefix-vs-suffix">19.1.3 货币与计量单位 (Prefix vs Suffix)</h3>
 <p>中文口语习惯将符号（如 ￥, $）放在数字之后读出单位，书写时却在前面。</p>
-<p>| 符号 | 含义 | TN 规则 (Text  Audio) | ITN 规则 (Audio  Text) |</p>
+<p>| 符号 | 含义 | TN 规则 (Text → Audio) | ITN 规则 (Audio → Text) |</p>
 <table>
 <thead>
 <tr>
 <th>符号</th>
 <th>含义</th>
-<th>TN 规则 (Text  Audio)</th>
-<th>ITN 规则 (Audio  Text)</th>
+<th>TN 规则 (Text → Audio)</th>
+<th>ITN 规则 (Audio → Text)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>￥</strong></td>
 <td>RMB</td>
-<td><code>￥100</code>  <code>一百 元</code> / <code>一百 块</code></td>
-<td><code>一百元</code>  <code>100元</code> (推荐) 或 <code>￥100</code></td>
+<td><code>￥100</code> → <code>一百 元</code> / <code>一百 块</code></td>
+<td><code>一百元</code> / <code>100元</code> (推荐) 或 <code>￥100</code></td>
 </tr>
 <tr>
 <td>**$**</td>
 <td>Dollar</td>
-<td><code>$10``十 美元</code>/<code>十 刀</code></td>
-<td><code>十美元``$10</code>或<code>10美元</code></td>
+<td><code>$10</code> → <code>十 美元</code> / <code>十 刀</code></td>
+<td><code>十美元</code> → <code>$10</code> 或 <code>10美元</code></td>
 </tr>
 </tbody>
 </table>
@@ -631,7 +631,7 @@
 <h3 id="1952-itn">19.5.2 推理阶段 (ITN 后)</h3>
 <ul>
 <li><strong>标点恢复 (Punctuation Restoration)</strong>：这是一个独立的 NLP 模型（通常是 BERT/Transformer-based）。</li>
-<li><strong>处理顺序</strong>：ASR Output  ITN (转数字/格式)  Punctuation Model (加标点)。</li>
+<li><strong>处理顺序</strong>：ASR Output → ITN (转数字/格式) → Punctuation Model (加标点)。</li>
 <li><em>理由</em>：标点模型通常在规范文本上训练，先做 ITN 把 <code>三点半</code> 变成 <code>3:30</code> 有助于标点模型判断句读。</li>
 </ul>
 <hr />
@@ -662,8 +662,8 @@
 <ol>
 <li>
 <p><strong>“零”的消失与重现</strong>
-* TN: <code>101</code>  <code>一百零一</code> (有零)。
-* TN: <code>110</code>  <code>一百一十</code> (无零，虽然有人读一百一)。
+* TN: <code>101</code> → <code>一百零一</code> (有零)。
+* TN: <code>110</code> → <code>一百一十</code> (无零，虽然有人读一百一)。
 * <strong>Gotcha</strong>: 不同的 TTS 引擎生成的合成数据，对“零”的处理可能不一致，需清洗。</p>
 </li>
 <li>
