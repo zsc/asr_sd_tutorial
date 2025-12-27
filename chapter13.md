@@ -81,8 +81,8 @@ Result: Match=5, Error=0. MER=0.0%
 建议构建一个标准化的 `normalize_for_eval(text)` 函数，包含以下层级：
 
 1. **Unicode 规范化 (NFKC)**：
-* 解决全角/半角问题：`Ａ`  `A`, `１`  `1`。
-* 解决组合字符问题：`e` + `´`  `é`。
+* 解决全角/半角问题：`Ａ` → `A`, `１` → `1`。
+* 解决组合字符问题：`e` + `´` → `é`。
 
 
 2. **大小写 (Casing)**：
@@ -160,7 +160,7 @@ DER 是时间维度的错误率，不关心说话人是谁，只关心“这段�
 
 1. 对每个 Reference Speaker，找到与其重叠最大的 Hypothesis Speaker。
 2. 计算该配对的 Jaccard Index（交并比）。
-3. 计算所有 Reference Speakers 的 Jaccard 错误率  的**平均值**。
+3. 计算所有 Reference Speakers 的 Jaccard 错误率 JER_i 的**平均值**。
 4. **特点**：每个说话人（无论话多话少）权重相等。
 
 ---
@@ -205,7 +205,7 @@ MLLM 在长时间静音或音乐段容易“发疯”，输出重复的“Thank 
 
 ## 13.6 本章小结
 
-1. **ASR 核心**：。必须注意分母是 Ref。
+1. **ASR 核心**：WER = (S + D + I) / N。必须注意分母是 Ref。
 2. **TN 是基石**：评测前必须统一全半角、标点、大小写。中文用 CER，英文用 WER，混语用 MER。
 3. **Diarization 三巨头**：DER（时间错误）、JER（说话人公平）、Collar（容差）。不要在未声明 Collar 的情况下对比 DER。
 4. **MLLM 挑战**：从“字面匹配”转向“语义匹配”与“幻觉控制”。
@@ -261,14 +261,14 @@ Hyp: "南京市长江" (Nanjing City Yangtze River - 典型断句错误导致的
 Ref: [南京] [市长]
 Hyp: [南京市] [长江]
 对齐后完全不匹配。S=2 (或 S=1, I=1 等，取决于距离计算，但通常是完全错误)。
-WER .
+WER = 2/2 = 1.0。
 2. **CER**:
 Ref: 南 京 市 长
 Hyp: 南 京 市 长 江
 Match: 南, 京, 市, 长。
 Insertion: 江。
 S=0, D=0, I=1, N=4。
-CER = .
+CER = 1/4 = 0.25。
 3. **结论**：CER (25%) 更合理。声学模型其实只多听了一个音（江），前面都对了。WER (100%) 夸大了错误，因它受到了分词歧义的影响。
 
 </details>
@@ -289,7 +289,7 @@ Hyp: Spk_1 (0-10s), Spk_2 (10-20s)
 1. **重叠矩阵**：
 Spk_1 vs Spk_A: 10s 重叠。
 Spk_2 vs Spk_B: 10s 重叠。
-2. **映射**：Spk_1  Spk_A, Spk_2  Spk_B。
+2. **映射**：Spk_1 -> Spk_A, Spk_2 -> Spk_B。
 3. **错误计算**：
 Miss = 0, FA = 0, Conf = 0。
 DER = 0.0%。
@@ -312,7 +312,7 @@ Hyp: "it is ten pm"
 Ref tokens: "It's", "10:00", "p.m." (3 tokens)
 Hyp tokens: "it", "is", "ten", "pm" (4 tokens)
 对齐：It's(S)->it, (I)->is, 10:00(S)->ten, p.m.(S)->pm.
-WER  或更高 (视 tokenizer 而定)。
+WER 约 133%（可能 >100%，视 tokenizer 而定）。
 2. **有 Normalization**:
 Ref -> expansion -> "it is ten pm"
 Hyp -> expansion -> "it is ten pm"
@@ -417,21 +417,21 @@ WER 计算为 Insertion Error。
 **答案**：
 
 1. **分析**：
-* 总时长 。
-* Overlap 时长 。
+* 总时长 600s。
+* Overlap 时长 60s。
 * 在 Overlap 区域，Ref 人数 = 2，Hyp 人数 = 1。
 * 每一时刻，模型都漏掉了一个人 (Missed Detection)。
-* Missed Speech Duration = 。
+* Missed Speech Duration = 60s。
 
 
 2. **分母计算**：
-* Total Speech in Ref = (单人说话时长) + (双人说话时长  2)
+* Total Speech in Ref = (单人说话时长) + (双人说话时长 × 2)
 * 假设剩余 90% 是单人说话（不考虑静音以便简化，或者假设全是语音）：
-* Total Speech = 。
+* Total Speech = 540s + 120s = 660s。
 
 
 3. **DER 计**：
-* 。
+* DER = 60 / 660 ≈ 9.1%。
 
 
 4. **结论**：即使其他部分完美，不支持 Overlap 的系统在包含 10% 重叠的数据上，DER 最好也只能达到 ~9.1%。
@@ -452,7 +452,7 @@ WER 计算为 Insertion Error。
 
 * **现象**：VAD 切分出的某些片段完全是噪音，Reference 为空字符串。计算 WER 时分母为 0。
 * **修复**：
-* **单句级别**：如果  且 ，则 WER 无法定义（或视为无穷大/100%）。
+* **单句级别**：如果 N=0 且 Hyp 非空，则 WER 无法定义（或视为无穷大/100%）。
 * **全局级别**：始终使用 `Sum(Errors) / Sum(N_ref)` 来计算整个测试集的 WER，而**不是**对每句话的 WER 求平均。这样可以自动处理空 Ref 的问题（只要总 Ref 不为空）。
 
 

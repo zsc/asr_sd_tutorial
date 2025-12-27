@@ -19,8 +19,8 @@
 | 维度 | 传统 ASR / End-to-End (Ch 7-9) | MLLM ASR (Speech-Language Model) |
 | --- | --- | --- |
 | **核心目标** | 最小化 WER (Word Error Rate) | 最大化语义理解与指令遵循 |
-| **输入输出** | Audio  Text | Audio + Text Prompt  Text Response |
-| **建模范式** | $P(\text{Text} | \text{Audio})$ |
+| **输入输出** | Audio → Text | Audio + Text Prompt → Text Response |
+| **建模范式** | $P(\text{Text} | \text{Audio})$ | $P(\text{Response} | \text{Audio}, \text{Prompt})$ |
 | **世界知识** | 几乎没有 (依赖外部 LM) | 极其丰富 (内建于 LLM 参数中) |
 | **典型代表** | Kaldi, Conformer-Transducer, Whisper | Qwen-Audio, SpeechGPT, GPT-4o |
 
@@ -39,7 +39,7 @@
 
 最直观的方案：**ASR Model + LLM**。
 
-* **工作流**：Audio  Text Transcript  LLM  Result。
+* **工作流**：Audio → Text Transcript → LLM → Result。
 * **优点**：
 * **模块化**：ASR 和 LLM 可以独立升级（例如 ASR 换成最新的 Paraformer，LLM 换成 Llama 3）。
 * **极低成本**：不需要训练，全是推理。

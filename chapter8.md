@@ -94,7 +94,7 @@ RNN 是递归的（时刻 t 依赖 t-1），这导致无法并行计算。TDNN �
 
 对于 LSTM，时刻 t 的输出依赖于 h_{t-1}, c_{t-1}。在流式中，当 Chunk n 处理完后，必须将其最后一帧的 Hidden State (h) 和 Cell State (c) **缓存**下来，作为 Chunk n+1 的初始状态。
 
-> **注意**：CNN/TDNN 也是有状态的！因为卷积需要左侧上下文。处理 Chunk  时，需要缓存 Chunk  的最后几帧原始特征，拼接到 Chunk  的头部，以消除卷积边缘效应。
+> **注意**：CNN/TDNN 也是有状态的！因为卷积需要左侧上下文。处理 Chunk n 时，需要缓存 Chunk n 的最后几帧原始特征，拼接到 Chunk n+1 的头部，以消除卷积边缘效应。
 
 ### 3.2 延迟计算 (The Math of Latency)
 
@@ -228,12 +228,12 @@ Transformer 这种架构对数据极其饥渴（Data Hungry），因为它没有
 
 **Answer:**
 
-1. **算法延迟 (Algorithmic)** = 。
+1. **算法延迟 (Algorithmic)** = 40ms + 120ms = 160ms。
 2. **用户感知延迟**：
-* 平均等待半个 Chunk: 
-* 等待 Lookahead: 
-* 处理延迟 (假设刚处理完前一块):  (注: 这是一个简化估算，实际处理时间随 chunk 大小变化)
-* 总计约  左右。（注：若 RTF=0.5，说明处理很快，主要瓶颈在 Lookahead）。
+* 平均等待半个 Chunk: 20ms
+* 等待 Lookahead: 120ms
+* 处理延迟 (假设刚处理完前一块): 20ms (注: 这是一个简化估算，实际处理时间随 chunk 大小变化)
+* 总计约 160ms 左右。（注：若 RTF=0.5，说明处理很快，主要瓶颈在 Lookahead）。
 
 
 
@@ -246,7 +246,7 @@ Transformer 这种架构对数据极其饥渴（Data Hungry），因为它没有
 
 **Answer:**
 
-* **定义**：将上一个 Chunk 结束时 LSTM 的内部状态（）保存下来，作为下一个 Chunk 的初始状态。
+* **定义**：将上一个 Chunk 结束时 LSTM 的内部状态（h, c）保存下来，作为下一个 Chunk 的初始状态。
 * **后果**：如果不做，每一个 Chunk 对于 LSTM 来说都是一个新的开始（状态清零），模型会丢失之前的上下文信息。会导致**句子中间断裂**，识别结果语无伦次，准确率大幅下降。
 
 </details>
@@ -290,7 +290,7 @@ Transformer 这种架构对数据极其饥渴（Data Hungry），因为它没有
 
 * **陷阱 1：双向 LSTM (BiLSTM)**。离线训练常用 BiLSTM，它利用了全句的未来信息。流式推理只能用 Uni-directional LSTM。如果你训练用 BiLSTM，推理时强行切开，反向层是无法工作的。
 * **陷阱 2：Global Padding vs. Causal Padding**。
-* **训练时**：CNN 默认 Padding 往往是在两边补零（Same Padding），这意味着  时刻的卷积利用了  的信息。
+* **训练时**：CNN 默认 Padding 往往是在两边补零（Same Padding），这意味着 t 时刻的卷积利用了 t+1 的信息。
 * **推理时**：如果没有未来的数据，边缘无法进行同样的卷积运算。
 * **解决**：训练时必须强制使用 **Causal Convolution**（只 Padding 左边）或通过 Mask 遮挡未来信息，确保训练和推理的感受野一致。
 

@@ -6,7 +6,7 @@
 
 在前面的二十章中，我们从数据的采集清洗，一路讲到了 MLLM 的微调与 RAG 落地。然而，ASR 与 Speaker Diarization 是典型的**“长尾问题”**领域——跑通一个 Baseline 很容易，但解决那 5% 的恶性错误（Bad Case）却需要深厚的经验积累。
 
-本章被设计为你的**案头手册（Cheat Sheet）和救火指南**。这里不仅有跨越三个时代的术语定义，防止你在阅读不年份的论文时产生歧义；更有一份汇集了工业界无数次“踩坑”经验的 FAQ，覆盖了从“Loss 不收敛”到“MLLM 幻觉”的各类疑难杂症；最后，我们按技术演进脉络梳理了一份必读文献清单，助你从“知其然”进阶到“知其所以然”。
+本章被设计为你的**案头手册（Cheat Sheet）和救火指南**。这里不仅有跨越三个时代的术语定义，防止你在阅读不同年份的论文时产生歧义；更有一份汇集了工业界无数次“踩坑”经验的 FAQ，覆盖了从“Loss 不收敛”到“MLLM 幻觉”的各类疑难杂症；最后，我们按技术演进脉络梳理了一份必读文献清单，助你从“知其然”进阶到“知其所以然”。
 
 ---
 
@@ -17,7 +17,7 @@
 ### 2.1 模型架构与机制 (Architecture & Mechanism)
 
 * **CTC (Connectionist Temporal Classification)**
-* **定义**：一种不需要帧级别强对齐（Frame-level Alignment）的损失函数。它引入了  (blank) 符号，允许神经网络的输出序列长度短于输入特征序列长度。
+* **定义**：一种不需要帧级别强对齐（Frame-level Alignment）的损失函数。它引入了 blank 符号（_），允许神经网络的输出序列长度短于输入特征序列长度。
 * **关键特性**：输出之间相互独立（Conditional Independence），因此无法根据前文修正后文（除非外挂 LM）。
 * **典型应用**：DeepSpeech 2, Wav2Vec 2.0 的预训练目标。
 
@@ -39,14 +39,14 @@
 
 
 * **EEND (End-to-End Neural Diarization)**
-* **定义**：彻底抛弃“聚类”思想的 Diarization 方法。它将任务建模为**多标签分类（Multi-label Classification）**问题，输出维度为 （时间  说话人数）。
+* **定义**：彻底抛弃“聚类”思想的 Diarization 方法。它将任务建模为**多标签分类（Multi-label Classification）**问题，输出维度为 T×S（时间 × 说话人数）。
 * **优势**：天然支持 Overlap（重叠语音）检测。
 
 
 * **MLLM (Multimodal Large Language Model)**
 * **定义**：指能够理解非文本模态（如音频）的大语言模型。
 * **Speech-LLM 两大流派**：
-1. **Cascaded (级联)**：ASR 模型转文字  LLM 处理。
+1. **Cascaded (级联)**：ASR 模型转文字 → LLM 处理。
 2. **End-to-End (端到端)**：音频通过 Encoder 变为 Continuous Embeddings 或 Discrete Tokens，直接作为 LLM 的 Prompt 输入。
 
 
@@ -78,7 +78,7 @@
 ### 2.3 评测指标 (Evaluation Metrics)
 
 * **WER / CER (Word/Character Error Rate)**
-* **公式**：（替换+删除+插入 / 参考总数）。
+* **公式**：（替换 + 删除 + 插入） / 参考总数。
 * **陷阱**：中文算 CER，英文算 WER。如果中英混杂，必须定义清晰的 **MER (Mixed Error Rate)** 计算规则（中文按字，英文按词）。
 
 

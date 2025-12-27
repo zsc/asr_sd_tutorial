@@ -13,7 +13,7 @@
 
 ## 9.1 开篇：从“特征工程”到“规模法则”
 
-在 Chapter 7 和 8 中，我们到工程师们像搭积木一样精心设计网络：用 CNN 抓取频域纹理，用 LSTM 记忆时间依赖。然而，随着 Transformer 在 NLP 领域的爆发，语音领域迎来了一次**“暴力美学”与“归纳偏置”的完美融合**。
+在 Chapter 7 和 8 中，我们看到工程师们像搭积木一样精心设计网络：用 CNN 抓取频域纹理，用 LSTM 记忆时间依赖。然而，随着 Transformer 在 NLP 领域的爆发，语音领域迎来了一次**“暴力美学”与“归纳偏置”的完美融合**。
 
 这一时期的核心矛盾是：**标注数据太贵，而无标数据太便宜**。
 传统的监督训练（Supervised Learning）往往在 1万小时数据后遭遇边际效应递减。而本章介绍的 **自监督学习（SSL）** 范式，证明了模型容量（Model Size）与无标数据量（Unlabeled Data）可以遵循 Scaling Law（规模法则），将 WER（词错误率）推向新低。
@@ -24,7 +24,7 @@
 
 ## 9.2 架构进化：Conformer 详解
 
-Transformer 的全全局注意力（Global Self-Attention）虽然强大，但在语音处理上存在两个先天缺陷：
+Transformer 的全局注意力（Global Self-Attention）虽然强大，但在语音处理上存在两个先天缺陷：
 
 1. **局部性缺失**语音具有极强的局部相关性（如共振峰的连续性），CNN 提取这种特征极其高效，而 Transformer 需要大量数据才能学会关注“邻居”。
 2. **位置编码失效**：传统的绝对位置编码（Absolute PE）难以处理推理时变长的音频（训练 10秒，推理 1小时）。
@@ -56,7 +56,7 @@ Output
 
 1. **Macaron Net 风格**：FFN 被拆成两个半步（Half-step）分别放在 Attention 的前后。实验证明这种结构比标准 Transformer（Attention -> FFN）收敛更稳。
 2. **相对位置编码 (Relative Positional Encoding)**：这是 Conformer 能处理长音频的关键。模型不再记住“第 5 帧”的绝对特征，而是学习“当前帧与前 5 帧”的相对关系。这使得模型具有了**平移不变性**。
-3. **Swish 激活函数**：全线替代 ReLU。。它在负区间有非零梯度，更平滑，对深层网络训练更友好。
+3. **Swish 激活函数**：全线替代 ReLU。它在负区间有非零梯度，更平滑，对深层网络训练更友好。
 
 ### 9.2.2 卷积模块 (Conv Module) 内部
 
@@ -88,23 +88,23 @@ Output
 
 Transducer 由三部分组成：
 
-* **Encoder (AM)**: 处理声学特征 （如 Conformer）。
-* **Predictor (LM)**: 处理历史预测的 token 。注意，现代 Transducer 往往使用无状态（Stateless）的 Predictor（仅 Embedding 或 简单 Conv），因为 Conformer Encoder 已经够强了，弱化 LM 可以减少为了“通顺”而忽略“发音”的错误。
+* **Encoder (AM)**: 处理声学特征 X（如 Conformer）。
+* **Predictor (LM)**: 处理历史预测的 token y_{<u}。注意，现代 Transducer 往往使用无状态（Stateless）的 Predictor（仅 Embedding 或 简单 Conv），因为 Conformer Encoder 已经够强了，弱化 LM 可以减少为了“通顺”而忽略“发音”的错误。
 * **Joint Network**: 融合 AM 和 LM 的特征。
 
 #### 格点游走 (Lattice Walk)
 
 训练过程可以看作在一个网格上找路径：
 
-* **横轴**：时间  (Acoustic frames)
-* **纵轴**：文本长度  (Label tokens)
+* **横轴**：时间 t (Acoustic frames)
+* **纵轴**：文本长度 u (Label tokens)
 * **动作**：
-*  (Blank): 保持当前文本不变，时间步 （向右走）。
-*  (Token): 输出一个字，文本长度 ，时间步不变（向上走）。
+* **Blank**: 保持当前文本不变，时间步 t→t+1（向右走）。
+* **Token**: 输出一个字，文本长度 u→u+1，时间步不变（向上走）。
 
 
 
-> **Gotcha**: Transducer 的显存消耗巨大，因为要计算  的 4D 张量（ 是词表大小）。**Pruned Transducer (如 k2/icefall)** 通过只计算对角线附近的路径，将内存消耗降到了原来的 1/10 甚至更低。
+> **Gotcha**: Transducer 的显存消耗巨大，因为要计算 T×U×V 的 4D 张量（V 是词表大小）。**Pruned Transducer (如 k2/icefall)** 通过只计算对角线附近的路径，将内存消耗降到了原来的 1/10 甚至更低。
 
 ---
 
@@ -136,7 +136,7 @@ Transducer 由三部分组成：
 这是一个至重要的概念。
 HuBERT 的输出并不是连续的向量，而是对音频帧进行了**离散化 (Discretization)**。
 
-* 它把连续的语音空间切分成了  个簇（例如 500 或 2000 个）。
+* 它把连续的语音空间切分成了 K 个簇（例如 500 或 2000 个）。
 * 每一帧音频都有一个对应的 Cluster ID。
 * **这实际上就是把语音变成了“外星语言”的文字**。MLLM 正是利用这些 Discrete Tokens 来“读”语音的。
 
@@ -155,7 +155,7 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了**离散�
 
 借鉴 NLP语音界也开始大规模使用 Adapter：
 
-* **LoRA (Low-Rank Adaptation)**: 在 Attention 的  矩阵旁路增加低秩矩阵。
+* **LoRA (Low-Rank Adaptation)**: 在 Attention 的 W_q/W_v 等矩阵旁路增加低秩矩阵。
 * **Adapter Layer**: 在 FFN 之后插入小型的 MLP 层。
 * **价值**: 你可以为一个底座模型挂载 100 个不同的“语言包”，每个包只有 10MB，而不是存 100 个大模型。
 
@@ -197,7 +197,7 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了**离散�
 
 ### 基础题
 
-1. **计算题**：假设音频帧移为 10ms，下采样率为 4（即模型每输出一步对应原始 4 帧）。一段 10 秒的音频进入 Conformer Encoder 后，输出的序列长度  是多少？
+1. **计算题**：假设音频帧移为 10ms，下采样率为 4（即模型每输出一步对应原始 4 帧）。一段 10 秒的音频进入 Conformer Encoder 后，输出的序列长度 U 是多少？
 2. **概念辨析**：在使用 wav2vec 2.0 进行微调时，为什么通常要加一个 `LayerDrop` 机制？
 3. **Transducer**：在 RNN-T 的 Joint Network 中，通常操作是单纯的相加（Add）还是拼接（Concat）？为什么现代实现倾向于使用简单的加法？
 
@@ -211,8 +211,8 @@ HuBERT 的输出并不是连续的向量，而是对音频帧进行了**离散�
 <summary><strong>点击查看参考答案</strong></summary>
 
 1. **序列长度计算**
-* 总帧数 =  帧。
-* 下采样率为 4，输出  帧。
+* 总帧数 = 1000 帧。
+* 下采样率为 4，输出 250 帧。
 
 
 2. **LayerDrop**
