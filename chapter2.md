@@ -4,7 +4,7 @@
 
 在构建任何模型（无论是简单的 LSTM 还是庞大的多模态大模型 MLLM）之前，我们需要先搭建一个“稳固的工厂”。ASR 与 Diarization 任务在工程上具有独特性：**变长序列带来的负载不均衡**、**海量小文件造成的 IO 压力**、以及**CTC/Transducer 损失函数对数值稳定性的苛刻要求**。
 
-本章旨在建立一套**高吞吐（High Throughput）**、**可复现（Reproducible）**且**可观测（Observable）**的训练流水线。我们将从硬件瓶颈分析入手，深入探讨数据加载的“分片”艺术、分布式训练的略选择（DDP vs FSDP），以及如何优雅地管理那些让工程师彻夜难眠的 `NaN` 和死锁问题。
+本章旨在建立一套**高吞吐（High Throughput）**、**可复现（Reproducible）**且**可观测（Observable）**的训练流水线。我们将从硬件瓶颈分析入手，深入探讨数据加载的“分片”艺术、分布式训练的策略选择（DDP vs FSDP），以及如何优雅地管理那些让工程师彻夜难眠的 `NaN` 和死锁问题。
 
 > **学习目标**：
 > * 识别并解决 GPU 训练中的 IO 和 CPU 瓶颈。
@@ -50,7 +50,7 @@
 
 
 4. **OOM (Out Of Memory)**：
-* **ASR 特有痛点**：音频长度不仅是变长的，而且长尾效应严重。一条 30 秒的音频所需的中间激活值（Activation）内存可能是 3 秒音频的 10 倍以上（如果是 Attention 甚至是 100 倍，因为 ）。
+* **ASR 特有痛点**：音频长度不仅是变长的，而且长尾效应严重。一条 30 秒的音频所需的中间激活值（Activation）内存可能是 3 秒音频的 10 倍以上（如果是 Attention 甚至可达百倍，因为其复杂度随长度平方增长）。
 
 
 
@@ -69,7 +69,7 @@
 
 ### 3.1 为什么不能直接 `Dataset` + `File Open`？
 
-操作系统打文件有开销（Inode lookup）。当你有一千万个音频文件时：
+操作系统打开文件有开销（Inode lookup）。当你有一千万个音频文件时：
 
 * 文件系统元数据缓存（Page Cache）会失效。
 * `ls` 命令会卡死。
@@ -126,12 +126,12 @@ audio_shard_001.tar
 
 ASR 训练中广泛使用的 **CTC Loss** 涉及大量的指数运算（Exp）和累加。
 
-* **FP16 (Half Precision)**：指数位围太小（最大约 65504）。CTC 计算中  或  极易导致 Underflow（下溢为0）或 Overflow（上溢为Inf）。结果就是 Loss = `NaN` 或 `Inf`。
+* **FP16 (Half Precision)**：指数范围太小（最大约 65504）。CTC 计算中的多次 `exp`/`log-sum-exp` 累加极易导致 Underflow（下溢为 0）或 Overflow（上溢为 Inf）。结果就是 Loss = `NaN` 或 `Inf`。
 * **BF16 (Bfloat16)**：**ASR 训练的救星**。它截断了尾数位，但保留了和 FP32 一样的指数位（8-bit exponent）。几乎不需要 Gradient Scaler 即可稳定训练。
 
 > **Rule of Thumb 4.2 (精度选择)**
 > * **Ampere 架构及以后 (A100, 3090, 4090)**: 全程开启 **BF16**。
-> * **Volta/Turing 架构 (V100, 2080Ti)**: 只能用 **FP16**。**必须**在该层将 CTC Loss / Transducer Loss 的计算转回 **FP32** 进行，然后再转回 FP16 传梯度。
+> * **Volta/Turing 架构 (V100, 2080Ti)**: 只能用 **FP16**。**必须**在该处将 CTC Loss / Transducer Loss 的计算转回 **FP32** 进行，然后再转回 FP16 传梯度。
 > 
 > 
 
@@ -178,7 +178,7 @@ exp/
 * **调试期 (Debugging)**：固定种子 (`torch.manual_seed(42)`, `cudnn.deterministic=True`)。确保每 Bug 都能复现。
 * **生产期 (Production)**：
 * **建议**：固定种子，但允许 `cudnn.benchmark=True`（牺牲一点确定性换取速度）。
-* **警惕**：在 DDP 中，如果所有 GPU 的 Data Loader 种子一样，它们会读取完全相同的数据切片！**必须确保 `seed = base_seed + rank**`。
+* **警惕**：在 DDP 中，如果所有 GPU 的 Data Loader 种子一样，它们会读取完全相同的数据切片！**必须确保 `seed = base_seed + rank`**。
 
 
 
@@ -241,7 +241,6 @@ exp/
 
 * **答案**：
 总计约 **16 Bytes / param**。
-。
 *注意*：这只是静态占用。ASR 的动态 Activation（尤其是 Attention map）通常是这个数字的数倍。
 
 </details>
@@ -262,7 +261,7 @@ Batch B: 10 条音频，每条 2秒。
 Batch A (全是10s): Padding = 0。
 Batch B (全是2s): Padding = 0。
 Batch C (混合): 最长 10s。5条短音频（2s）每条都需要 Pad 8s。
-Padding 区域 = 。有效区域 = 。
+Padding 区域 = 5 × 8s = 40s。有效区域 = 60s。
 这就是为什么我们需要 **Bucket Sampler** 将长度相似的音频放在一起。
 
 </details>
@@ -313,7 +312,7 @@ WebDataset 是流式读取，无法像随机访问内存那样做全局 Shuffle�
 现代 ASR 模型（如 Conformer）前端通常有 4倍下采样（2层 stride=2 的 CNN）。
 1秒音频 = 100帧 (10ms/帧)。
 下采样后 = 25帧。
-CTC 需要插入 blank 符号。如果文本是 2个字，加上 blank 至少需要  帧。这看起来够。
+CTC 需要插入 blank 符号。如果文本是 2 个字，加上 blank 至少需要 3 帧。这看起来够。
 但如果卷积没有 padding，或者音频实际上只有 0.3秒（30帧 -> 下采样后 7帧），再加上开头结尾的静音，有效声学帧可能极少，导致无法找到一条合理的对齐路径。
 
 </details>
