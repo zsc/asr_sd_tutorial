@@ -394,7 +394,7 @@ Output: [
 <h3 id="52-overlap">5.2 难点：Overlap (重叠语音)</h3>
 <p>当 A 和 B 同时说话时，提取出的 Embedding 既不像 A 也不像 B，而是一个位于两者中间的“怪异向量”。这会导致聚类产生第三个“幽灵说话人”。</p>
 <ul>
-<li><em>解决思路</em>：Overlapped Speech Detection (OSD) 模型，先检测重，再做分离（Separation）或多标签分类。</li>
+<li><em>解决思路</em>：Overlapped Speech Detection (OSD) 模型，先检测重叠，再做分离（Separation）或多标签分类。</li>
 </ul>
 <hr />
 <h2 id="6">6. 典型产品形态与约束</h2>
@@ -411,7 +411,7 @@ Output: [
 <ul>
 <li><strong>场景</strong>：语音输入法、直播字幕。</li>
 <li><strong>硬约束</strong>：</li>
-<li><strong>Causal (因果性)</strong>：第  帧的输出只能依赖  时刻之前的输入。</li>
+<li><strong>Causal (因果性)</strong>：第 t 帧的输出只能依赖 t 时刻之前的输入。</li>
 <li><strong>Lookahead (前瞻)</strong>：允许看未来一小段（比如 160ms），以牺牲一点延迟换取精度。</li>
 <li><strong>Stateful (有状态)</strong>：RNN/LSTM 需要在内存中维护 hidden states；Transformer 需要维护 KV Cache。</li>
 </ul>

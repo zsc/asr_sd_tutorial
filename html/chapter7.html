@@ -235,8 +235,8 @@
 </ul>
 <hr />
 <h2 id="2">2. 文字论述</h2>
-<h3 id="71-rnn">7.1 RNN 声学模型：序列模的基石</h3>
-<p>ASR 的本质是计算后验概率 ，其中  是声学特征序列（如 Mel-spectrogram）， 是文本序列。难点在于 （音频帧数远多于字数），且两者没有预先定义的对应关系。</p>
+<h3 id="71-rnn">7.1 RNN 声学模型：序列建模的基石</h3>
+<p>ASR 的本质是计算后验概率 P(Y|X)，其中 X 是声学特征序列（如 Mel-spectrogram），Y 是文本序列。难点在于 T &gt;&gt; U（音频帧数远多于字数），且两者没有预先定义的对应关系。</p>
 <h4 id="711-lstmgru">7.1.1 为什么是 LSTM/GRU？</h4>
 <p>普通的 RNN 存在严重的<strong>梯度消失（Vanishing Gradient）</strong>问题，导致模型“记不住”长距离的上下文（例如句首的语调影响句尾的语气）。</p>
 <ul>
@@ -264,11 +264,11 @@
 <h3 id="72-asr">7.2 训练目标：ASR 的灵魂</h3>
 <p>这是章最核心的部分。如何让模型在<strong>不知道哪个时间点对应哪个字</strong>的情况下学会识别？</p>
 <h4 id="721-ctc-connectionist-temporal-classification">7.2.1 CTC (Connectionist Temporal Classification)</h4>
-<p>CTC 是不需要对齐数据的端到端训练的鼻祖。它的核心思想是引入 <strong>Blank Token ()</strong> 并对所有可能的对齐路径进行积分。</p>
+<p>CTC 是不需要对齐数据的端到端训练的鼻祖。它的核心思想是引入 <strong>Blank Token (_)</strong> 并对所有可能的对齐路径进行积分。</p>
 <ol>
 <li>
 <p><strong>映射逻辑</strong>
-CTC 定义了一个多对一的映射 ，规则如下：</p>
+CTC 定义了一个多对一的映射 B(·)，规则如下：</p>
 </li>
 <li>
 <p>合并连续的相同符号（Collapse repeats）。</p>
@@ -276,24 +276,27 @@ CTC 定义了一个多对一的映射 ，规则如下：</p>
 <li>移除 Blank 符号（Remove blanks）。</li>
 </ol>
 <p><strong>图解：路径折叠</strong>
-假设输出词表为 ， 为 blank。目标单词是 <code>"ab"</code>。
-以下所有路径（Path）在经过  变换后都是合法的 <code>"ab"</code>：</p>
+假设输出词表为 V，_ 为 blank。目标单词是 <code>"ab"</code>。
+以下所有路径（Path）在经过 B 变换后都是合法的 <code>"ab"</code>：</p>
 <ul>
-<li>: <code>a</code>, <code>b</code>, <code>_</code>, <code>_</code>  <code>ab</code></li>
-<li>: <code>_</code>, <code>a</code>, <code>_</code>, <code>b</code>  <code>ab</code></li>
-<li>: <code>a</code>, <code>a</code>, <code>_</code>, <code>b</code>  <code>ab</code></li>
-<li>: <code>a</code>, <code>_</code>, <code>b</code>, <code>b</code>  <code>ab</code></li>
+<li>Path 1: <code>a</code>, <code>b</code>, <code>_</code>, <code>_</code>  <code>ab</code></li>
+<li>Path 2: <code>_</code>, <code>a</code>, <code>_</code>, <code>b</code>  <code>ab</code></li>
+<li>Path 3: <code>a</code>, <code>a</code>, <code>_</code>, <code>b</code>  <code>ab</code></li>
+<li>Path 4: <code>a</code>, <code>_</code>, <code>b</code>, <code>b</code>  <code>ab</code></li>
 <li><strong>陷阱</strong>：<code>a</code>, <code>a</code>, <code>b</code>, <code>b</code>  <code>ab</code> (注意：<code>aa</code>合并成<code>a</code>)</li>
 <li><strong>非法</strong>：<code>b</code>, <code>a</code>, <code>_</code>, <code>_</code>  <code>ba</code> (错)</li>
 </ul>
 <ol start="2">
-<li><strong>损失函数</strong></li>
-</ol>
-<p>我们要最大化所有能映射到真实文本  的路径概率之和。
-由于路径数量随间呈指数爆炸（），直接求和不可行。CTC 使用 <strong>前向-后向算法（Forward-Backward Algorithm）</strong> 进行动态规划计算，将复杂度降为 。</p>
-<ol start="3">
-<li><strong>CTC 的尖峰行为 (Spike Behavior)</strong>
-训练成熟的 CTC 模型非常有意思：它倾向于在字符发音的<strong>中间或结束时刻</strong>给出一个极高的概率尖峰，而在其余时间全部预测为 Blank。</li>
+<li>
+<p><strong>损失函数</strong>
+CTC 的目标是最大化所有能映射到真实文本 y 的路径概率之和：
+L = -log P(y|x) = -log ∑_{π ∈ B^{-1}(y)} P(π|x)
+由于路径数量随 T 指数增长，直接求和不可行。CTC 使用 <strong>前向-后向算法（Forward-Backward Algorithm）</strong> 进行动态规划计算，将复杂度降为 O(TU)。</p>
+</li>
+<li>
+<p><strong>CTC 的尖峰行为 (Spike Behavior)</strong>
+训练成熟的 CTC 模型非常有意思：它倾向于在字符发音的<strong>中间或结束时刻</strong>给出一个极高的概率尖峰，而在其余时间全部预测为 Blank。</p>
+</li>
 </ol>
 <ul>
 <li>这种特性使得 CTC 非常适合做<strong>关键词检索</strong>和<strong>强制对齐</strong>。</li>
@@ -305,13 +308,13 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <h4 id="722-attention-based-las-listen-attend-spell">7.2.2 Attention-based (LAS: Listen, Attend, Spell)</h4>
 <p>LAS 采用了 Seq2Seq (Encoder-Decoder) 结构。</p>
 <ul>
-<li><strong>Listen (Encoder)</strong>: 提取高层特征 。</li>
-<li><strong>Attend (Attention)</strong>: 在解码第  个字时，计算 context vector 。它是  的加权平均，权重取决于 Decoder 当前状态与  的相似度。</li>
-<li><strong>Spell (Decoder)</strong>: 基于  和上一个字  预测当前字 。</li>
+<li><strong>Listen (Encoder)</strong>: 提取高层特征 H。</li>
+<li><strong>Attend (Attention)</strong>: 在解码第 i 个字时，计算 context vector c_i。它是 H 的加权平均，权重取决于 Decoder 当前状态 s_{i-1} 与每个 h_t 的相似度。</li>
+<li><strong>Spell (Decoder)</strong>: 基于 c_i 和上一个字 y_{i-1} 预测当前字 y_i。</li>
 </ul>
 <p><strong>LAS vs CTC：</strong></p>
 <ul>
-<li><strong>CTC</strong> 假设每一帧输出是<strong>条件独立</strong>的（）。这导致 CTC 很难学会复杂的语言模型知识（如“虽然”后面大概率接“但是”）。</li>
+<li><strong>CTC</strong> 假设每一帧输出是<strong>条件独立</strong>的（P(π|X)=∏_t P(π_t|X)）。这导致 CTC 很难学会复杂的语言模型知识（如“虽然”后面大概率接“但是”）。</li>
 <li><strong>LAS</strong> 是自回归的（Auto-regressive），它天然自带语言模型能力，通常识别率更高。</li>
 <li><strong>LAS 的致命弱点</strong>：<strong>对齐不单调</strong>。在长静音或噪声段，Attention 可能会“注意力涣散”，导致重复解码（repeating）或漏词（deletion）。</li>
 </ul>
@@ -330,7 +333,7 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <ul>
 <li><strong>Greedy</strong>: 每一步选概率最大的。快，但短视。</li>
 <li>
-<p><strong>Beam Search</strong>: 维护一个宽度为  的候选池（Beam）。每一步保留全局分数最高的  条路径。
+<p><strong>Beam Search</strong>: 维护一个宽度为 B 的候选池（Beam）。每一步保留全局分数最高的 B 条路径。
 *</p>
 </li>
 <li>
@@ -340,12 +343,12 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <h4 id="732-lm-fusion-shallow-fusion">7.3.2 LM Fusion (Shallow Fusion)</h4>
 <p>RNN 声学模型虽然强，但受限于训练数据的文本覆盖度。我们需要外挂一个在大规模纯文本上训练的 Language Model (LM)。</p>
 <ul>
-<li>** (LM weight)**: 一个超参数，需要在验证集上调优。</li>
+<li><strong>λ (LM weight)</strong>: 一个超参数，需要在验证集上调优。</li>
 <li><strong>作用</strong>：纠正同音错别字。例如 ASR 听到 "ping guo"，声学模型分不清“平果”和“苹果”，但 LM 知道“苹果”概率大得多。</li>
 </ul>
 <hr />
 <h3 id="74-mllm-the-bridge">7.4 对 MLLM 的借鉴意义（The Bridge）</h3>
-<p>不要以为 RNN 已经过气了。在构建 GPT-4o 级别的语音交互模时，RNN 时代的智慧无处不在。</p>
+<p>不要以为 RNN 已经过气了。在构建 GPT-4o 级别的语音交互模型时，RNN 时代的智慧无处不在。</p>
 <h4 id="741-mllm">7.4.1 MLLM 的“时间戳锚点”</h4>
 <p>MLLM（如 Whisper, Qwen-Audio）本质上是一个巨大的 Decoder。它们擅长生成语义通顺的文本，但<strong>极不擅长精准的时间对齐</strong>。</p>
 <ul>
@@ -390,7 +393,7 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <li>t2: <code>[0.6, 0.4, 0.0]</code></li>
 <li>t3: <code>[0.0, 1.0, 0.0]</code></li>
 </ul>
-<p>请计算目标文本 "a" 的总概率 。</p>
+<p>请计算目标文本 "a" 的总概率。</p>
 <details>
 <summary><b>显示答案与解析</b></summary>
 <p><strong>答案：</strong>
@@ -406,14 +409,14 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 </ol>
 <p><strong>计算各路径概率：</strong></p>
 <ol>
-<li><code>a, _, _</code>:  (因为 t3 的 blank 概率是 0)</li>
-<li><code>_, a, _</code>: </li>
-<li><code>_, _, a</code>: </li>
-<li><code>a, a, _</code>: </li>
-<li><code>_, a, a</code>: </li>
-<li><code>a, a, a</code>: </li>
+<li><code>a, _, _</code>: 0.2 * 0.6 * 0.0 = 0 (因为 t3 的 blank 概率是 0)</li>
+<li><code>_, a, _</code>: 0.8 * 0.4 * 0.0 = 0</li>
+<li><code>_, _, a</code>: 0.8 * 0.6 * 1.0 = 0.48</li>
+<li><code>a, a, _</code>: 0.2 * 0.4 * 0.0 = 0</li>
+<li><code>_, a, a</code>: 0.8 * 0.4 * 1.0 = 0.32</li>
+<li><code>a, a, a</code>: 0.2 * 0.4 * 1.0 = 0.08</li>
 </ol>
-<p><strong>总概率</strong> = </p>
+<p><strong>总概率</strong> = 0.88</p>
 </details>
 <h4 id="q2-subsampling">Q2: Subsampling 的维度变化</h4>
 <p>输入音频特征维度为 <code>(Batch=1, Time=1000, Dim=80)</code>。
@@ -422,8 +425,8 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <summary><b>显示答案</b></summary>
 <p><strong>答案：</strong></p>
 <ul>
-<li>第一层卷积 stride=2，长度变为 。</li>
-<li>第二层卷积 stride=2，长度变为 。</li>
+<li>第一层卷积 stride=2，长度变为 500。</li>
+<li>第二层卷积 stride=2，长度变为 250。</li>
 <li>输出 Time 约为 250。</li>
 <li><strong>重要性</strong>：CTC Loss 要求 <code>Input_Length &gt;= Target_Length</code>。如果目标文本有 300 个字，而降采样后只剩 250 帧，CTC 就无法放置所有的字符（哪怕一个格子放一个也不够），会导致 Loss NaN 或报错。因此降采样倍率不能无限大。</li>
 </ul>
@@ -435,7 +438,7 @@ CTC 的输出并不是“字符持续了多久”，而是一个“触发信号�
 <summary><b>显示答案</b></summary>
 <p><strong>答案：</strong></p>
 <ul>
-<li>CTC 的假设是 。也就是说，模型在预测  时刻的字符时，只看声学特征，而不看之前预测了什么字符。</li>
+<li>CTC 的假设是 P(π|X)=∏_t P(π_t|X)。也就是说，模型在预测 t 时刻的字符时，只看声学特征，而不看之前预测了什么字符。</li>
 <li>对于 "pair" 和 "pear"，它们的声学特征（发音）几乎一模一样。</li>
 <li>如果是一个自回归模型（如 LAS 或 Transformer），在预测 "pair" 之前，如果看到前文是 "I bought a..."，它可能会倾向于 "pair of shoes"；如果前文是 "Just ate a..."，倾向于 "pear"。</li>
 <li>但 CTC <strong>看不到前文的解码结果</strong>。它只能根据声音瞎猜。如果数据里 "pair" 出现得多，它就永远猜 "pair"。</li>

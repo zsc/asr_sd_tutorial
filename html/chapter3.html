@@ -269,7 +269,7 @@
 <li><strong>8kHz (Narrowband)</strong>: 电话系统标准。如果业务场景是电话客服，<strong>必须</strong>包含 8kHz 数据，或者将 16kHz 下采样训练。</li>
 <li><strong>Up-sampling 的陷阱</strong>: 绝对不要把 8kHz 插值强转为 16kHz 混入训练，这会产生“空频带”，导致模型在真实 16kHz 场景下对高频噪声过敏。</li>
 </ul>
-<h4 id="322">3.2.2 码与容器</h4>
+<h4 id="322">3.2.2 编码与容器</h4>
 <ul>
 <li><strong>PCM WAV (signed 16-bit)</strong>: 训练首选。解码速度最快，无压缩损耗。</li>
 <li><strong>FLAC</strong>: 存储首选。无损压缩（节省 ~40% 空间），解码开销适中。</li>
@@ -321,7 +321,7 @@ Result: 测试集 WER 1%，上线 WER 30%。模型记住了 Spk1 的麦克风底
 <li><strong>信噪比 (SNR)</strong>: 安静环境与嘈杂环境。</li>
 <li><strong>口音</strong>: 如果做中文 ASR，测试集必须包含非标准普通话（川普、广普）。</li>
 </ul>
-<h3 id="35-forced-alignment">3.5 强制对齐 (Forced Alignment) 与自动化洗</h3>
+<h3 id="35-forced-alignment">3.5 强制对齐 (Forced Alignment) 与自动化清洗</h3>
 <p>面对 10,000 小时的原始录音（如会议录音、电视剧），人工切分是不可能的。必须构建自动流水线。</p>
 <p><strong>推荐工具链</strong>:</p>
 <ol>
@@ -388,7 +388,7 @@ Final Dataset (Chunks &lt; 30s)
 <span class="w">  </span><span class="p">],</span>
 <span class="w">  </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;hotwords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;公园&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;天气&quot;</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;speaker_profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Young female, Bejing accent&quot;</span>
+<span class="w">    </span><span class="nt">&quot;speaker_profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Young female, Beijing accent&quot;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>

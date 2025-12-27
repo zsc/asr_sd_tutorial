@@ -221,7 +221,7 @@
 <p>在构建 ASR 和 Speaker Diarization 系统时，“特征提取”（Feature Extraction）是将原始音频波形（Raw Waveform）转换为机器可理解的二维矩阵（Time × Frequency）的第一步。这一步决定了模型“听”到了什么。如果特征提取丢弃了关键信息（如音素共振峰），模型结构再复杂也无力回天；反之，如果特征保留了过多噪声或信道干扰，模型将难以泛化。</p>
 <p>本章将跨越三个技术时代，深入探讨语音特征的演进：</p>
 <ol>
-<li><strong>信号处理时代</strong>：以 <strong>MFCC</strong> 和 <strong>Fbank</strong> 为代表，基于人类听觉感知理（Psychoacoustics）设计的固定变换。这是所有语音工程师的必修课。</li>
+<li><strong>信号处理时代</strong>：以 <strong>MFCC</strong> 和 <strong>Fbank</strong> 为代表，基于人类听觉感知原理（Psychoacoustics）设计的固定变换。这是所有语音工程师的必修课。</li>
 <li><strong>可学习前端时代</strong>：尝试用 <strong>Conv1D</strong> 和 <strong>SincNet</strong> 等神经网络结构替代固定的 STFT，让模型从波形直接学习滤波器。</li>
 <li><strong>自监督学习（SSL）时代</strong>：基于 Transformer 的 <strong>wav2vec 2.0 / HuBERT / WavLM</strong>，它们提取的不再是简单的声学频谱，而是包含上下文和语义的高级表征（Representation）。</li>
 </ol>
@@ -229,7 +229,7 @@
 <hr />
 <h2 id="61">6.1 经典声学特征：信号处理的智慧</h2>
 <p>尽管深度学习模型越来越强，但在许多低资源、低功耗或对延迟极其敏感的场景（如端侧唤醒、实时字幕），基于信号处理的 Fbank 依然是工业界的绝对主力。</p>
-<h3 id="611">6.1.1 核心流程解</h3>
+<h3 id="611">6.1.1 核心流程解析</h3>
 <p>原始音频通常是一维的时域连续信号。为了分析它，我们需要将其转化为频域信号。经典流水线包含以下严格步骤：</p>
 <div class="codehilite"><pre><span></span><code><span class="p">[</span><span class="n">Raw</span><span class="w"> </span><span class="n">Waveform</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="n">Time</span><span class="w"> </span><span class="n">Domain</span><span class="p">)</span>
 <span class="w">      </span><span class="o">|</span>
@@ -273,7 +273,7 @@
 <h4 id="a-pre-emphasis">A. 预加重 (Pre-emphasis)</h4>
 <ul>
 <li><strong>物理意义</strong>：人类发声时，受唇辐射影响，高频能量随频率增加而衰减（约 -6dB/octave）。如果直接分析，高频共振峰（Formants，对区分辅音至关重要）会被低频能量淹没。</li>
-<li><strong>公式</strong>：，通常 。</li>
+<li><strong>公式</strong>：y[t] = x[t] - α·x[t-1]，通常 α ≈ 0.97。</li>
 <li><strong>作用</strong>：作为高通滤波器，提升高频分量，使频谱变得平坦。</li>
 </ul>
 <h4 id="b-framing-windowing">B. 分帧与加窗 (Framing &amp; Windowing)</h4>
@@ -292,7 +292,7 @@
 <h4 id="c-mel-mel-filterbanks">C. Mel 滤波器组 (Mel Filterbanks)</h4>
 <ul>
 <li><strong>人耳的非线性</strong>：人耳对低频（如 500Hz vs 600Hz）非常敏感，但对高频（如 10000Hz vs 10100Hz）分辨力很差。</li>
-<li><strong>Mel 刻度公式</strong>：。</li>
+<li><strong>Mel 刻度公式</strong>：mel(f) = 2595 · log10(1 + f/700)。</li>
 <li><strong>操作</strong>：在 FFT 得到的线性频谱上，应用一组三角形滤波器（低频密集、高频稀疏）。通常使用 <strong>40</strong> 或 <strong>80</strong> 个滤波器，得到 40/80 维特征。</li>
 </ul>
 <h3 id="613-fbank-vs-mfcc">6.1.3 Fbank vs. MFCC：深度学习选哪个？</h3>
@@ -317,9 +317,10 @@
 <hr />
 <h2 id="62-cmvn">6.2 特征归一化：CMVN 的工程实践</h2>
 <p>特征的数值范围受录音设备增益、说话人距离等非语义因素影响巨大。归一化是让模型“只关注内容，不关注音量”的关键。</p>
-<h3 id="621-cmvn">6.2.1 倒谱均值方差一化 (CMVN)</h3>
-<p>核心公式：</p>
-<p>其中  是时间帧， 是频率通道。</p>
+<h3 id="621-cmvn">6.2.1 倒谱均值方差归一化 (CMVN)</h3>
+<p>核心公式：
+x'<em t_f="t,f">{t,f} = (x</em> - μ_f) / σ_f
+其中 t 是时间帧，f 是频率通道。</p>
 <h3 id="622">6.2.2 三种归一化策略对比</h3>
 <p>| 策略 | 描述 | 优点 | 缺点 | 适用场景 |</p>
 <table>
@@ -335,21 +336,21 @@
 <tbody>
 <tr>
 <td><strong>Global CMVN</strong></td>
-<td>在整个训练集计算固定的</td>
+<td>在整个训练集计算固定的均值/方差统计量</td>
 <td>计算简单，模型输入分布稳定</td>
 <td>无法消除单条音频特有的信道畸变</td>
 <td>较少单独使用</td>
 </tr>
 <tr>
 <td><strong>Utterance CMVN</strong></td>
-<td><strong>每句话</strong>单独计算</td>
+<td><strong>每句话</strong>单独计算均值/方差</td>
 <td>完美消除该句话的信道/响度偏差</td>
 <td>需要拿到整句音频才能计算</td>
 <td><strong>离线 ASR 标准方案</strong></td>
 </tr>
 <tr>
 <td><strong>Streaming CMVN</strong></td>
-<td>使用滑动窗口或累积统计量估算当前</td>
+<td>使用滑动窗口或累积统计量估算当前均值/方差</td>
 <td>低延迟，因果性（Causal）</td>
 <td>早期帧估计不准，实现复杂</td>
 <td><strong>流式 ASR / 实时会议</strong></td>
@@ -368,11 +369,11 @@
 <h3 id="631">6.3.1 机制</h3>
 <ol>
 <li>
-<p><strong>Frequency Masking</strong>：随机将频谱图上连续的  个频带置为 0（或均值）。
+<p><strong>Frequency Masking</strong>：随机将频谱图上连续的 F 个频带置为 0（或均值）。
 * <em>目的</em>：模拟频域失真，迫使模型不依赖单一频段（如只看基频），而是利用高频谐波。</p>
 </li>
 <li>
-<p><strong>Time Masking</strong>：随机将连续的  帧置为 0。
+<p><strong>Time Masking</strong>：随机将连续的 T 帧置为 0。
 * <em>目的</em>：模拟短暂的信号丢失或突发噪声，迫使模型根据上下文（Context）推断内容（类似 BERT 的 Mask LM）。</p>
 </li>
 <li>
@@ -384,7 +385,7 @@
 <ul>
 <li><strong>Freq Masks</strong>: 2 个 block，每个最大宽度 30 bins。</li>
 <li><strong>Time Masks</strong>: 2 个 block，每个最大宽度 40 frames。</li>
-<li><strong>自适应策略</strong>：Time Mask 的宽度不能超过音频总长的 （例如 20%），否则短语令可能被完全遮盖导致“空标签”问题。</li>
+<li><strong>自适应策略</strong>：Time Mask 的宽度不能超过音频总长的 p（例如 20%），否则短语音可能被完全遮盖导致“空标签”问题。</li>
 </ul>
 <hr />
 <h2 id="64-conv1d-sincnet">6.4 可学习前端：从 Conv1D 到 SincNet</h2>
@@ -397,7 +398,7 @@
 <h3 id="642-sincnet-diarization">6.4.2 SincNet：受约束的卷积 (重点：Diarization)</h3>
 <p>SincNet 提出了一种折中方案：<strong>保留物理约束，学习关键参数</strong>。</p>
 <ul>
-<li><strong>原理</strong>：强制卷积核呈现“带通滤波器”（Band-pass filter）的形状。网络不学习卷积核的每一个权重，而是学习滤波器的<strong>低频截止频率 ** 和 </strong>高频截止频率 **。卷积核通过 Sinc 函数生成。</li>
+<li><strong>原理</strong>：强制卷积核呈现“带通滤波器”（Band-pass filter）的形状。网络不学习卷积核的每一个权重，而是学习滤波器的<strong>低频截止频率 f1</strong> 和 <strong>高频截止频率 f2</strong>。卷积核通过 Sinc 函数生成。</li>
 <li><strong>Diarization 价值</strong>：在说话人识别（Speaker Verification）任务中，SincNet 往往优于 Fbank。因为 Fbank 的三角滤波抹平了许多高频细节（Pitch 及其谐波的微小抖动），而这些细节正是区分说话人的关键指纹。</li>
 </ul>
 <hr />

@@ -222,7 +222,7 @@
 <p>音频预处理不仅仅是“清洗”，它是<strong>重新定义数据形态</strong>的过程。它包含三个核心任务：</p>
 <ol>
 <li><strong>提纯（Purification）</strong>：通过 VAD 和信号处理去除无效信息。</li>
-<li><strong>结构化（Segmentation）</strong>：将连续流切分为模型可消化的“原子”单元（Chunk/Utterance。</li>
+<li><strong>结构化（Segmentation）</strong>：将连续流切分为模型可消化的“原子”单元（Chunk/Utterance）。</li>
 <li><strong>泛化（Augmentation）</strong>：通过波形级变换，模拟真实世界的复杂声学环境。</li>
 </ol>
 <p>本章将带你深入 ASR 与 Diarization 的物理层，从经典的信号处理理论到 MLLM 时代的动态切分策略。我们将揭示如何让模型在噪杂的鸡尾酒会中“听清”每一个字。</p>
@@ -240,7 +240,7 @@
 <h3 id="21-dc-offset">2.1 直流偏移（DC Offset）</h3>
 <p>理想的音频波形应该围绕 0 轴（X轴）上下振动。但廉价麦克风或电路接地不良会导致波形整体向上或向下平移。</p>
 <ul>
-<li><strong>影响</strong>：导致能量计算（）虚高，影响 VAD 的阈值判断；在做 FFT 时会在 0Hz 处产生巨大的能量尖峰。</li>
+<li><strong>影响</strong>：导致能量计算（RMS）虚高，影响 VAD 的阈值判断；在做 FFT 时会在 0Hz 处产生巨大的能量尖峰。</li>
 <li><strong>处理</strong>：<strong>去均值（Mean Subtraction）</strong>。</li>
 </ul>
 <blockquote>
@@ -265,7 +265,7 @@
 <p><em>原因</em>：上采样后的 16kHz 音频，在 4kHz-8kHz 的高频部分是完全空白的（或仅有插值噪声）。</p>
 </li>
 <li><em>后果</em>：模型会困惑——“为什么有的数据高频有纹理（真实 16k），有的数据高频是平的（伪 16k）？”这会导致模型对高频特征的权重分配失效。</li>
-<li><em>对</em>：要么将所有数据<strong>降采样</strong>到 8kHz 训练专用模型，要么训练一个带宽鲁棒的模型（Bandwidth Agnostic），在训练中随机对 16kHz 数据做 8kHz 低通滤波以模拟窄带。</li>
+<li><em>对策</em>：要么将所有数据<strong>降采样</strong>到 8kHz 训练专用模型，要么训练一个带宽鲁棒的模型（Bandwidth Agnostic），在训练中随机对 16kHz 数据做 8kHz 低通滤波以模拟窄带。</li>
 </ul>
 <hr />
 <h2 id="3-vad-sad">3. VAD 与 SAD：从“能量门”到“神经开关”</h2>
@@ -311,7 +311,7 @@
 <p>VAD 输出了有效的语音段，但这些段落可能长达几分钟。我们需要将其进一步切分为训练样本。</p>
 <h3 id="41">4.1 为什么要切分？</h3>
 <ol>
-<li><strong>显存预算（OOM）</strong>：Transformer 的 Self-Attention 显存消耗随长度平方增长 。通常训练切片控制在 <strong>30秒</strong> 以内是性价比最高的。</li>
+<li><strong>显存预算（OOM）</strong>：Transformer 的 Self-Attention 显存消耗随长度平方增长（O(L^2)）。通常训练切片控制在 <strong>30秒</strong> 以内是性价比最高的。</li>
 <li><strong>位置编限制</strong>：许多正弦位置编码（Sinusoidal PE）在训练时见过最长的长度决定了推理时的极限。</li>
 <li><strong>CTC 对齐稳定性</strong>：CTC 算法在极长序列上容易出现尖峰坍塌或对齐漂移。</li>
 </ol>
@@ -387,7 +387,7 @@
 <h3 id="53-mllm-sot-serialized-output-training">5.3 MLLM 时代的思路：SOT (Serialized Output Training)</h3>
 <p>对于强大的 MLLM，我们可以不分离音频，而是训练它按顺序输出：</p>
 <ul>
-<li><strong>输入</strong>： (重叠音频)</li>
+<li><strong>输入</strong>：多说话人重叠音频</li>
 <li><strong>目标文本</strong>：<code>&lt;speaker1&gt; Hello how are you &lt;speaker2&gt; I am fine thank you</code></li>
 <li>这种方法利用了 Transformer 强大的注意力机制，在内部隐式地完成了“源分离”。</li>
 </ul>
@@ -397,17 +397,17 @@
 <h3 id="61-speed-perturb">6.1 变速变调 (Speed Perturb) —— 性价比之王</h3>
 <ul>
 <li><strong>原理</strong>：重新采样音频。</li>
-<li>播放速度 0.9x  时长变长  频率降低（男声化）。</li>
+<li>播放速度 0.9x → 时长变长、基频降低（男声化）。</li>
 <li>
-<p>播放速度 1.1x  时长变短  频率升高（女声化）。</p>
+<p>播放速度 1.1x → 时长变短、基频升高（女声化）。</p>
 </li>
 <li>
-<p><strong>数学本质</strong>：。</p>
+<p><strong>数学本质</strong>：时间轴缩放，t' = t / s（s 为速度因子）。</p>
 </li>
 <li>
 <p><strong>操作</strong>：
 通常生成 3 份数据：<code>0.9</code>, <code>1.0</code>, <code>1.1</code>。
-<strong>注意：</strong> 必须同步修改标注文件（TextGrid / JSON）中的 <code>start</code>, <code>end</code> 时间戳！。</p>
+<strong>注意：</strong> 必须同步修改标注文件（TextGrid / JSON）中的 <code>start</code>, <code>end</code> 时间戳！</p>
 </li>
 <li>
 <p><strong>收益</strong>：不仅仅是数据量 x3，更重要的是它模拟了声道长度（Vocal Tract Length）的变化，极大提升了模型对不同说话人的泛化能力。</p>
@@ -416,7 +416,7 @@
 <h3 id="62-rir-convolution">6.2 房间冲激响应 (RIR Convolution) —— 模拟混响</h3>
 <p>真实环境总是有回声的。在无混响（Anechoic）数据上训练的模型，进会议室就死。</p>
 <ul>
-<li><strong>原理</strong>：，其中  是房间冲激响应（Room Impulse Response）。</li>
+<li><strong>原理</strong>：y(t) = x(t) * h(t)，其中 h(t) 是房间冲激响应（Room Impulse Response）。</li>
 <li><strong>数据源</strong>：OpenSLR RIR Noise 数据集。包含小房间、大厅、走廊的真实 RIR。</li>
 <li><strong>实现</strong>：随机选择一个 RIR 文件，与当前语音做卷积。这比简单的添加混响效果器更物理真实。</li>
 </ul>
@@ -473,7 +473,7 @@
 <h3 id="_1">基础题</h3>
 <ol>
 <li><strong>参数调试</strong>：你训练的 ASR 模型经常把句首的“喂”、“好”等短词漏掉（Deletion Error）。请检查你的 VAD 参数，最可能需要调整哪一个？（Hint: Onset padding vs Threshold）。</li>
-<li><strong>SNR 计算</strong>：如果你有一段能量为  的语音，你想加入一段噪声，使得 SNR 为 10dB。你需要将噪声的能量  缩放到  的多少倍？（Hint: 利用  公式反推）。</li>
+<li><strong>SNR 计算</strong>：如果你有一段能量为 E_s 的语音，你想加入一段噪声，使得 SNR 为 10dB。你需要将噪声的能量 E_n 缩放到 E_s 的多少倍？（Hint: 利用 SNR(dB)=10·log10(E_s/E_n) 公式反推）。</li>
 <li><strong>增广副作用</strong>：对 16kHz 音频做 0.9x 变速（变慢）处理后，新的采样率在物理上变得更低了还是更高了？如果仍然以 16kHz 播放，音调会变低还是变高？</li>
 </ol>
 <h3 id="_2">挑战题</h3>
@@ -487,13 +487,8 @@
 <p><strong>基础题答案</strong></p>
 <ol>
 <li><strong>Speech Pad Onset (头部填充)</strong> 需要增加，或者 <strong>Threshold (阈值)</strong> 需要降低。因为句首的短词往往能量是从弱变强的，容易被过早截断。</li>
-<li>
-<p><strong>0.1 倍 (即 10%)</strong>。
-。</p>
-</li>
-<li>
-<p><strong>变低</strong>。0.9x 意味着拉长波形。如果不改变播放采样率，频率会整体向低频移动，音调变低（Deep voice）。这也模拟了声道变长的效果。</p>
-</li>
+<li><strong>0.1 倍 (即 10%)</strong>。</li>
+<li><strong>变低</strong>。0.9x 意味着拉长波形。如果不改变播放采样率，频率会整体向低频移动，音调变低（Deep voice）。这也模拟了声道变长的效果。</li>
 </ol>
 <p><strong>挑战题提示</strong></p>
 <ol start="4">

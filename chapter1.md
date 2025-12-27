@@ -205,7 +205,7 @@ Diarization 通常被视为 ASR 的“后处理”，但其实它是一个独立
 
 当 A 和 B 同时说话时，提取出的 Embedding 既不像 A 也不像 B，而是一个位于两者中间的“怪异向量”。这会导致聚类产生第三个“幽灵说话人”。
 
-* *解决思路*：Overlapped Speech Detection (OSD) 模型，先检测重，再做分离（Separation）或多标签分类。
+* *解决思路*：Overlapped Speech Detection (OSD) 模型，先检测重叠，再做分离（Separation）或多标签分类。
 
 ---
 
@@ -227,7 +227,7 @@ Diarization 通常被视为 ASR 的“后处理”，但其实它是一个独立
 
 * **场景**：语音输入法、直播字幕。
 * **硬约束**：
-* **Causal (因果性)**：第  帧的输出只能依赖  时刻之前的输入。
+* **Causal (因果性)**：第 t 帧的输出只能依赖 t 时刻之前的输入。
 * **Lookahead (前瞻)**：允许看未来一小段（比如 160ms），以牺牲一点延迟换取精度。
 * **Stateful (有状态)**：RNN/LSTM 需要在内存中维护 hidden states；Transformer 需要维护 KV Cache。
 

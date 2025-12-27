@@ -63,7 +63,7 @@
 * **8kHz (Narrowband)**: 电话系统标准。如果业务场景是电话客服，**必须**包含 8kHz 数据，或者将 16kHz 下采样训练。
 * **Up-sampling 的陷阱**: 绝对不要把 8kHz 插值强转为 16kHz 混入训练，这会产生“空频带”，导致模型在真实 16kHz 场景下对高频噪声过敏。
 
-#### 3.2.2 码与容器
+#### 3.2.2 编码与容器
 
 * **PCM WAV (signed 16-bit)**: 训练首选。解码速度最快，无压缩损耗。
 * **FLAC**: 存储首选。无损压缩（节省 ~40% 空间），解码开销适中。
@@ -127,7 +127,7 @@ Result: 测试集 WER 1%，上线 WER 30%。模型记住了 Spk1 的麦克风底
 
 
 
-### 3.5 强制对齐 (Forced Alignment) 与自动化洗
+### 3.5 强制对齐 (Forced Alignment) 与自动化清洗
 
 面对 10,000 小时的原始录音（如会议录音、电视剧），人工切分是不可能的。必须构建自动流水线。
 
@@ -205,7 +205,7 @@ MLLM (如 Qwen-Audio, GPT-4o) 的输入不再是单纯的 `(wav, text)` 对，�
   ],
   "context": {
     "hotwords": ["公园", "天气"],
-    "speaker_profile": "Young female, Bejing accent"
+    "speaker_profile": "Young female, Beijing accent"
   }
 }
 
